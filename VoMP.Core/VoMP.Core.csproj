@@ -40,9 +40,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Contract.cs" />
+    <Compile Include="Cost.cs" />
+    <Compile Include="Goal.cs" />
     <Compile Include="Location.cs" />
+    <Compile Include="OutpostBonus.cs" />
+    <Compile Include="Player.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Reward.cs" />
     <Compile Include="Route.cs" />
+    <Compile Include="RouteMap.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
