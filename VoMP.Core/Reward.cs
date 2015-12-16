@@ -13,6 +13,7 @@ namespace VoMP.Core
         public int Vp { get; set; }
         public int Silk { get; set; }
         public int Gold { get; set; }
+        public int CityBonus { get; set; }
 
         public override string ToString()
         {
@@ -39,6 +40,8 @@ namespace VoMP.Core
                 yield return Gold == 1 ? "Gold" : $"{Gold} Gold";
             if (Silk > 0)
                 yield return Silk == 1 ? "Silk" : $"{Silk} Silk";
+            if (CityBonus > 0)
+                yield return CityBonus == 1 ? "City Bonus" : $"{CityBonus} City Bonuses";
         }
     }
 }
