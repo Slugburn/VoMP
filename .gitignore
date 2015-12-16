@@ -279,3 +279,6 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+/VoMP.Core.Tests/*.ncrunchproject
+/VoMP.Core/*.ncrunchproject
+/*.ncrunchsolution

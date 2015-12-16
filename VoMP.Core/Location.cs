@@ -1,0 +1,31 @@
+﻿namespace VoMP.Core
+{
+    public enum Location
+    {
+        Venezia,
+        Moscow,
+        Anxi,
+        Karakorum,
+        Beijing,
+        Samarcanda,
+        Kashgar,
+        LanZhou,
+        Alexandria,
+        Ormuz,
+        Karachi,
+        Xian,
+        Adana,
+        Kochi,
+        Sumatra,
+        OasisA,
+        OasisB,
+        OasisC,
+        OasisD,
+        OasisE,
+        OasisF,
+        OasisG,
+        OasisH,
+        OasisI,
+        OasisJ
+    }
+}
