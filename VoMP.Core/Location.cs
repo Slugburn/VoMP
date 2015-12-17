@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace VoMP.Core
+﻿namespace VoMP.Core
 {
     public enum Location
     {
@@ -31,18 +27,5 @@ namespace VoMP.Core
         OasisH,
         OasisI,
         OasisJ
-    }
-
-    public static class Locations
-    {
-        static Locations()
-        {
-            All = Enum.GetValues(typeof (Location)).Cast<Location>().ToList();
-            Oases = All.Where(x => x.ToString().StartsWith("Oasis"));
-        }
-
-        public static List<Location> All { get; }
-
-        public static IEnumerable<Location> Oases { get; }
     }
 }

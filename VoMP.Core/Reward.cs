@@ -11,9 +11,24 @@ namespace VoMP.Core
         public int Good { get; set; }
         public int Die { get; set; }
         public int Vp { get; set; }
-        public int Silk { get; set; }
         public int Gold { get; set; }
+        public int Silk { get; set; }
+        public int Pepper { get; set; }
         public int CityBonus { get; set; }
+
+        public Cost ToCost()
+        {
+            return new Cost
+            {
+                Camel = Camel,
+                Coin = Coin,
+                Gold = Gold,
+                Good = Good,
+                Pepper = Pepper,
+                Silk = Silk,
+                Vp = Vp
+            };
+        }
 
         public override string ToString()
         {
@@ -40,8 +55,28 @@ namespace VoMP.Core
                 yield return Gold == 1 ? "Gold" : $"{Gold} Gold";
             if (Silk > 0)
                 yield return Silk == 1 ? "Silk" : $"{Silk} Silk";
+            if (Pepper > 0)
+                yield return Pepper == 1 ? "Pepper" : $"{Pepper} Pepper";
             if (CityBonus > 0)
                 yield return CityBonus == 1 ? "City Bonus" : $"{CityBonus} City Bonuses";
+        }
+
+        public Reward Multiply(int factor)
+        {
+            return new Reward
+            {
+                Camel = Camel*factor,
+                CityBonus = CityBonus*factor,
+                Coin = Coin*factor,
+                Contract = Contract*factor,
+                Die = Die*factor,
+                Gold = Gold*factor,
+                Good = Good*factor,
+                Move = Move*factor,
+                Pepper = Pepper*factor,
+                Silk = Silk*factor,
+                Vp = Vp*factor
+            };
         }
     }
 }

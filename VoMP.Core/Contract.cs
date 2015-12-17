@@ -2,20 +2,12 @@
 {
     public class Contract
     {
-        static Contract()
-        {
-            Catalog = CreateContracts();
-            StartingContracts = CreateStartingContracts();
-        }
-
         public Contract(Cost cost, Reward reward)
         {
             Cost = cost;
             Reward = reward;
         }
 
-        public static Contract[] StartingContracts { get; set; }
-        public static Contract[] Catalog { get; set; }
         public Cost Cost { get; set; }
         public Reward Reward { get; set; }
 
@@ -24,7 +16,7 @@
             return $"{Cost} }} {Reward}";
         }
 
-        private static Contract[] CreateStartingContracts()
+        public static Contract[] CreateStartingContracts()
         {
             return new[]
             {
@@ -37,7 +29,7 @@
             };
         }
 
-        private static Contract[] CreateContracts()
+        public static Contract[] CreateContracts()
         {
             return new[]
             {

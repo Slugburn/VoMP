@@ -2,21 +2,14 @@
 {
     public class OutpostBonus
     {
-        public Reward Reward { get; }
-
         public OutpostBonus(Reward reward)
         {
             Reward = reward;
         }
 
-        static OutpostBonus()
-        {
-            Catalogue = CreateOutpostBonuses();
-        }
+        public Reward Reward { get; }
 
-        public static OutpostBonus[] Catalogue { get; set; }
-
-        private static OutpostBonus[] CreateOutpostBonuses()
+        public static OutpostBonus[] CreateAll()
         {
             return new[]
             {
@@ -29,7 +22,7 @@
                 new OutpostBonus(new Reward {Coin = 5}),
                 new OutpostBonus(new Reward {Coin = 3}),
                 new OutpostBonus(new Reward {Gold = 2}),
-                new OutpostBonus(new Reward {Camel = 2}),
+                new OutpostBonus(new Reward {Camel = 2})
             };
         }
 

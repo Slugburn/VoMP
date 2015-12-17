@@ -4,20 +4,14 @@ namespace VoMP.Core
 {
     public class CityBonus
     {
-        static CityBonus()
-        {
-            Catalogue = CreateCityBonuses();
-        }
-
         public CityBonus(Reward reward)
         {
             Reward = reward;
         }
 
         public Reward Reward { get; set; }
-        public static CityBonus[] Catalogue { get; set; }
 
-        private static CityBonus[] CreateCityBonuses()
+        public static CityBonus[] CreateAll()
         {
             return new []
             {
