@@ -32,7 +32,7 @@ namespace VoMP.Core.Behavior
 
             if (!travel.IsValid()) return null;
 
-            var dice = player.GetDiceAvailableFor(travel.Space).GetLowest(2, d=>d.Value > moveNeeded);
+            var dice = player.GetDiceAvailableFor(travel.Space).GetLowest(2, d=>d.Value >= moveNeeded);
             if (dice.Count == 0) return null;
             if (dice.Count == 1) return ImproveDice(state, travel.Space, moveNeeded);
 
