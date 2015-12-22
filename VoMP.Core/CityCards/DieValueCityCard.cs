@@ -13,27 +13,27 @@ namespace VoMP.Core.CityCards
 
         public override string ToString()
         {
-            return $"X }} {_reward}";
+            return $"X->{_reward}";
         }
 
-        public bool IsReversible { get; } = false;
-
-        public int MaxValue(Player player, bool reversed)
+        public int OptimumValue(Player player)
         {
-            Debug.Assert(!reversed);
-            return 6;
+            return 5;
         }
 
-        public Cost GetCost(int dieValue, bool reversed)
+        public Cost GetCost(int dieValue)
         {
-            Debug.Assert(!reversed);
             return Cost.None;
         }
 
-        public Reward GetReward(int dieValue, bool reversed)
+        public Reward GetReward(Player player, int dieValue)
         {
-            Debug.Assert(!reversed);
             return _reward.Multiply(dieValue);
+        }
+
+        public bool CanGenerate(Player player, ResourceType resourceType)
+        {
+            return resourceType == ResourceType.Coin;
         }
     }
 }

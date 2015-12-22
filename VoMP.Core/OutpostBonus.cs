@@ -15,7 +15,7 @@
             {
                 new OutpostBonus(new Reward {Good = 1}),
                 new OutpostBonus(new Reward {Camel = 3}),
-                new OutpostBonus(new Reward {Contract = 3}),
+                new OutpostBonus(new Reward {Contract = 1}),
                 new OutpostBonus(new Reward {Die = 1}),
                 new OutpostBonus(new Reward {Silk = 2}),
                 new OutpostBonus(new Reward {Move = 1}),

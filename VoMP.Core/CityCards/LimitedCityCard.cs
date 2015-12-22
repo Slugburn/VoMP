@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 
 namespace VoMP.Core.CityCards
 {
@@ -34,11 +33,13 @@ namespace VoMP.Core.CityCards
             }
         }
 
-        public bool IsReversible { get; } = false;
-
-        public int MaxValue(Player player, bool reversed)
+        public int OptimumValue(Player player)
         {
-            Debug.Assert(!reversed);
+            return GetLimit(player);
+        }
+
+        private int GetLimit(Player player)
+        {
             switch (_limitType)
             {
                 case LimitType.CompletedContract:
@@ -50,16 +51,30 @@ namespace VoMP.Core.CityCards
             }
         }
 
-        public Cost GetCost(int dieValue, bool reversed)
+        public Cost GetCost(int dieValue)
         {
-            Debug.Assert(!reversed);
             return Cost.None;
         }
 
-        public Reward GetReward(int dieValue, bool reversed)
+        public Reward GetReward(Player player, int dieValue)
         {
-            Debug.Assert(!reversed);
-            return _reward.Multiply(dieValue);
+            var value = Math.Min(GetLimit(player), dieValue);
+            return _reward.Multiply(value);
+        }
+
+        public bool CanGenerate(Player player, ResourceType resourceType)
+        {
+            var meetsLimit = OptimumValue(player) > 0;
+            if (!meetsLimit) return false;
+            switch (resourceType)
+            {
+                case ResourceType.Coin:
+                    return _reward.Coin > 0;
+                case ResourceType.Vp:
+                    return _reward.Vp > 0;
+                default:
+                    return false;
+            }
         }
     }
 }

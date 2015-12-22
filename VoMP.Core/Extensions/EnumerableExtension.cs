@@ -1,16 +1,42 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
-namespace VoMP.Core
+namespace VoMP.Core.Extensions
 {
-    public static class CardExtension
+    public static class EnumerableExtension
     {
         private static readonly Random Random = new Random();
 
+        public static void ForEach<T>(this IEnumerable<T> source, Action<T> action )
+        {
+            source.ToList().ForEach(action);
+        }
+
+        public static IEnumerable<IEnumerable<T>> Segment<T>(this IEnumerable<T> enumerable, int segmentSize)
+        {
+            if (segmentSize <= 0)
+                throw new ArgumentOutOfRangeException(nameof(segmentSize), segmentSize, "segmentSize must be larger than zero");
+
+            if (enumerable == null)
+                return null;
+
+            var idx = 0;
+            return enumerable.GroupBy(
+                item => (Interlocked.Increment(ref idx) - 1) / segmentSize,
+                item => item);
+        }
+
+
+        public static string ToDelimitedString<T>(this IEnumerable<T> source, string seperator = ",")
+        {
+            return string.Join(seperator, source);
+        }
+
         public static List<T> Shuffle<T>(this IEnumerable<T> source)
         {
-            var list = source as List<T> ?? new List<T>(source);
+            var list = new List<T>(source);
             var shuffled = new List<T>();
             while (list.Count > 0)
             {

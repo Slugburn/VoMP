@@ -2,12 +2,12 @@
 {
     public interface ICityCard
     {
-        bool IsReversible { get; }
+        Cost GetCost(int dieValue);
 
-        int MaxValue(Player player, bool reversed);
+        Reward GetReward(Player player, int dieValue);
 
-        Cost GetCost(int dieValue, bool reversed);
+        bool CanGenerate(Player player, ResourceType resourceType);
 
-        Reward GetReward(int dieValue, bool reversed);
+        int OptimumValue(Player player);
     }
 }

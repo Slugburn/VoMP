@@ -13,7 +13,7 @@
 
         public override string ToString()
         {
-            return $"{Cost} }} {Reward}";
+            return $"{Cost}->{Reward}";
         }
 
         public static Contract[] CreateStartingContracts()
@@ -53,8 +53,10 @@
                 new Contract(new Cost {Camel = 2, Gold = 2, Silk = 1}, new Reward {Coin = 4, Vp = 6}),
                 new Contract(new Cost {Camel = 2, Gold = 2, Silk = 2}, new Reward {Camel = 4, Vp = 6}),
                 new Contract(new Cost {Camel = 2, Gold = 2, Silk = 3}, new Reward {Contract = 1, Vp = 8}),
-                new Contract(new Cost {Camel = 3, Gold = 1, Silk = 2, Pepper = 1}, new Reward {Camel = 3, Contract = 1, Vp = 5}),
-                new Contract(new Cost {Camel = 3, Gold = 1, Silk = 2, Pepper = 1}, new Reward {Camel = 3, Coin = 4, Vp = 5}),
+                new Contract(new Cost {Camel = 3, Gold = 1, Silk = 2, Pepper = 1},
+                    new Reward {Camel = 3, Contract = 1, Vp = 5}),
+                new Contract(new Cost {Camel = 3, Gold = 1, Silk = 2, Pepper = 1},
+                    new Reward {Camel = 3, Coin = 4, Vp = 5}),
                 new Contract(new Cost {Camel = 2, Silk = 2, Pepper = 3}, new Reward {Move = 1, Vp = 5}),
                 new Contract(new Cost {Camel = 1, Pepper = 3}, new Reward {Die = 1, Vp = 2}),
                 new Contract(new Cost {Camel = 2, Silk = 1, Pepper = 2}, new Reward {Good = 2, Vp = 3}),

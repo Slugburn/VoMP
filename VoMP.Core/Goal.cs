@@ -4,11 +4,6 @@ namespace VoMP.Core
 {
     public class Goal
     {
-        static Goal()
-        {
-            Catalogue = CreateGoals();
-        }
-
         public Goal(Location location1, Location location2, int vp)
         {
             Location1 = location1;
@@ -19,9 +14,8 @@ namespace VoMP.Core
         public Location Location1 { get; set; }
         public Location Location2 { get; set; }
         public int Vp { get; set; }
-        public static Goal[] Catalogue { get; }
 
-        private static Goal[] CreateGoals()
+        public static Goal[] CreateAll()
         {
             return new[]
             {

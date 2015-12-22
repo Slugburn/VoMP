@@ -24,10 +24,10 @@
                 new ExchangeCityCard(new Cost {Camel = 1}, new Reward {Vp = 1}),
                 new ExchangeCityCard(new Cost {Camel = 3}, new Reward {Gold = 1, Silk = 1, Pepper = 1}),
                 new ExchangeCityCard(new Cost {Gold = 2}, new Reward {Vp = 4}),
-                new ExchangeCityCard(new Cost {Coin = 1}, new Reward {CityBonus = 1}),
-                new ReversibleCityCard(new Cost {Vp = 1}, new Reward {Coin = 3}),
-                new ReversibleCityCard(new Cost {Camel = 1}, new Reward {Coin = 3}),
-                new ReversibleCityCard(new Cost {Good = 1}, new Reward {Camel = 2}),
+                new ExchangeCityCard(new Cost {Coin = 1}, new Reward {TradingPostBonus = 1}),
+                new OptionCityCard(new [] {new ExchangeCityCard(new Cost {Camel = 1}, new Reward {Coin = 3}), new ExchangeCityCard(new Cost {Coin=1}, new Reward {Camel = 1} )}),
+                OptionCityCard.CreateReversible(new Cost {Vp = 1}, new Reward {Coin = 3}),
+                OptionCityCard.CreateReversible(new Cost {Good = 1}, new Reward {Camel = 2}),
                 new LimitedCityCard(new Reward {Coin = 2}, LimitType.CompletedContract),
                 new LimitedCityCard(new Reward {Vp = 1}, LimitType.CompletedContract),
                 new LimitedCityCard(new Reward {Coin = 2}, LimitType.TradingPost),
@@ -35,7 +35,7 @@
                 new DieRangeCityCard(1,5,new Reward{Gold = 1}, 6,6,new Reward {Gold=3} ),
                 new DieRangeCityCard(1,3,new Reward {Silk = 1},4,6,new Reward {Silk=3}), 
                 new DieRangeCityCard(1,1,new Reward {Pepper = 1},2,6,new Reward {Pepper = 3}), 
-                new DieRangeCityCard(1,4,new Reward {CityBonus = 1},5,6,new Reward {CityBonus = 2}), 
+                new DieRangeCityCard(1,4,new Reward {TradingPostBonus = 1},5,6,new Reward {TradingPostBonus = 2}), 
                 new DieValueCityCard(new Reward {Coin=2 })
             };
         }

@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System.CodeDom;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace VoMP.Core
 {
@@ -13,6 +15,8 @@ namespace VoMP.Core
         public int Vp { get; set; }
         public static Cost None { get; } = new Cost();
 
+        public int Rating => Camel + Coin + Good + Pepper + Silk * 2 + Gold * 3;
+
         public Reward ToReward()
         {
             return new Reward {Camel = Camel, Gold = Gold, Silk = Silk, Pepper = Pepper, Coin = Coin, Good = Good, Vp = Vp};
@@ -20,23 +24,24 @@ namespace VoMP.Core
 
         public override string ToString()
         {
-            return string.Join(",", GetDescriptions());
+            var descriptions = GetDescriptions().ToList();
+            return  descriptions.Any() ? string.Join(",", descriptions) : "nothing";
         }
 
         private IEnumerable<string> GetDescriptions()
         {
             if (Camel > 0)
-                yield return Camel == 1 ? "Camel" : $"{Camel} Camels";
+                yield return Camel == 1 ? "1 Camel" : $"{Camel} Camels";
             if (Gold > 0)
-                yield return Gold == 1 ? "Gold" : $"{Gold} Gold";
+                yield return $"{Gold} Gold";
             if (Silk > 0)
-                yield return Silk == 1 ? "Silk" : $"{Silk} Silk";
+                yield return $"{Silk} Silk";
             if (Pepper > 0)
-                yield return Pepper == 1 ? "Pepper" : $"{Pepper} Pepper";
+                yield return $"{Pepper} Pepper";
             if (Coin > 0)
-                yield return Coin == 1 ? "Coin" : $"{Coin} Coins";
+                yield return Coin == 1 ? "1 Coin" : $"{Coin} Coins";
             if (Good > 0)
-                yield return Good == 1 ? "Good" : $"{Good} Goods";
+                yield return Good == 1 ? "1 Good" : $"{Good} Goods";
             if (Vp > 0)
                 yield return $"{Vp} VP";
         }
@@ -52,6 +57,34 @@ namespace VoMP.Core
                 Pepper = Pepper*factor,
                 Silk = Silk*factor,
                 Vp = Vp*factor
+            };
+        }
+
+        public Cost Add(Cost add)
+        {
+            return new Cost
+            {
+                Camel = Camel + add.Camel,
+                Coin = Coin + add.Coin,
+                Gold = Gold + add.Gold,
+                Silk = Silk + add.Silk,
+                Pepper = Pepper + add.Pepper,
+                Good = Good + add.Good,
+                Vp = Vp + add.Vp
+            };
+        }
+
+        public Cost AllowingFor(Cost add)
+        {
+            return new Cost
+            {
+                Camel = Camel > 0 ? Camel + add.Camel : 0,
+                Coin = Coin > 0 ? Coin + add.Coin : 0,
+                Gold = Gold > 0 ? Gold + add.Gold + add.Good : 0,
+                Silk = Silk > 0 ? Silk + add.Silk + add.Good : 0,
+                Pepper = Pepper > 0 ? Pepper + add.Pepper + add.Good : 0,
+                Good = Good,
+                Vp = Vp + add.Vp
             };
         }
     }

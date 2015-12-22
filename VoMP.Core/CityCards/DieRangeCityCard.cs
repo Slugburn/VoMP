@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 
 namespace VoMP.Core.CityCards
 {
@@ -26,31 +27,37 @@ namespace VoMP.Core.CityCards
         {
             var range1 = _min1 == _max1 ? _min1.ToString() : $"{_min1}-{_max1}";
             var range2 = _min2 == _max2 ? _min2.ToString() : $"{_min2}-{_max2}";
-            return  $"[{range1}] {_reward1}; [{range2}] {_reward2}";
+            return  $"{range1}:{_reward1}|{range2}:{_reward2}";
         }
 
-        public bool IsReversible { get; } = false;
-
-        public int MaxValue(Player player, bool reversed)
+        public int OptimumValue(Player player)
         {
-            Debug.Assert(!reversed);
-            return 6;
+            return _min2;
         }
 
-        public Cost GetCost(int dieValue, bool reversed)
+        public Cost GetCost(int dieValue)
         {
-            Debug.Assert(!reversed);
             return Cost.None;
         }
 
-        public Reward GetReward(int dieValue, bool reversed)
+        public Reward GetReward(Player player, int dieValue)
         {
-            Debug.Assert(!reversed);
             if (_min1 <= dieValue && dieValue <= _max1)
-                return _reward1.Multiply(dieValue);
+                return _reward1;
             if (_min2 <= dieValue && dieValue <= _max2)
-                return _reward2.Multiply(dieValue);
+                return _reward2;
             throw new ArgumentOutOfRangeException(nameof(dieValue));
+        }
+
+        public bool CanGenerate(Player player, ResourceType resourceType)
+        {
+            if (_reward1.Gold > 0 &&resourceType == ResourceType.Gold) return true;
+            if (_reward1.Silk > 0 && resourceType == ResourceType.Silk) return true;
+            if (_reward1.Pepper > 0 && resourceType == ResourceType.Pepper) return true;
+            if (_reward1.TradingPostBonus == 0) return false;
+            
+            // Check to see if the player has any trading post bonuses that meet the requirements
+            return player.HasTradingPostBonusFor(resourceType);
         }
     }
 }

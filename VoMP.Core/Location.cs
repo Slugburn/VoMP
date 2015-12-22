@@ -2,11 +2,12 @@
 {
     public enum Location
     {
+        Unknown = 0,
         Venezia,
+        Beijing,
         Moscow,
         Anxi,
         Karakorum,
-        Beijing,
         Samarcanda,
         Kashgar,
         LanZhou,
@@ -28,4 +29,5 @@
         OasisI,
         OasisJ
     }
+
 }

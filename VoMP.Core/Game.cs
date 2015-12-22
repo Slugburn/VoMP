@@ -1,47 +1,150 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using VoMP.Core.Actions;
 using VoMP.Core.CityCards;
+using VoMP.Core.Extensions;
 
 namespace VoMP.Core
 {
     public class Game
     {
-        private Dictionary<Location, CityBonus> _cityBonuses;
-        private Dictionary<Location, OutpostBonus> _outpostBonuses;
-        private ILookup<Location, ICityCard> _cityCards;
+        private readonly IOutput _output = new ConsoleOutput();
         private List<Contract> _contracts;
+        private Player _currentPlayer;
+        private Dictionary<Location, MapLocation> _mapLocations;
         private List<Player> _players;
+        public List<Contract> AvailableContracts { get; private set; }
+        public Player StartPlayer { get; set; }
+        public List<IAction> Actions { get; private set; }
+        public int Round { get; set; }
+        public int BlackDice { get; set; }
 
         public void SetUp()
         {
+            // Create map spaces
+            _mapLocations = Locations.All.ToDictionary(loc => loc, loc => new MapLocation(loc));
+
             // Assign random city bonuses to small cities
-            _cityBonuses = Locations.SmallCities.PairWithRandom(CityBonus.CreateAll()).ToDictionary(x => x.Item1, x => x.Item2);
-            
+            Locations.SmallCities.PairWithRandom(CityBonus.CreateAll())
+                .ForEach(t => _mapLocations[t.Item1].CityBonus = t.Item2);
+
             // Assign random outpost bonuses to large cities
-            _outpostBonuses = Locations.LargeCities.PairWithRandom(OutpostBonus.CreateAll()).ToDictionary(x=>x.Item1,x=>x.Item2);
+            Locations.LargeCities.PairWithRandom(OutpostBonus.CreateAll())
+                .ForEach(t => _mapLocations[t.Item1].OutpostBonus = t.Item2);
 
             // Assign random city cards to large cities (3 to Sumatra)
-            var cityCardLocations = Locations.LargeCities.Union(new[] {Location.Sumatra, Location.Sumatra}).ToList();
-            _cityCards = cityCardLocations.PairWithRandom(CityCard.CreateAll()).ToLookup(x => x.Item1, x => x.Item2);
+            var cityCardLocations = Locations.LargeCities.Concat(new[] {Location.Sumatra, Location.Sumatra}).ToList();
+            cityCardLocations.PairWithRandom(CityCard.CreateAll())
+                .ForEach(t => _mapLocations[t.Item1].Actions.Add(new LargeCityAction(t.Item1, t.Item2)));
+
+            // Create list of actions
+            Actions = _mapLocations.Values.SelectMany(l => l.Actions)
+                .Concat(new IAction[] {new TakeFiveCoinsSpace(), new KhansFavorSpace(), new GoldBazaarSpace(), new SilkBazaarSpace(), new PepperBazaarSpace(), new CamelBazaarSpace(), new TakeContractSpace(), new TravelSpace()})
+                .ToList();
 
             // Shuffle contracts
             _contracts = Contract.CreateContracts().Shuffle();
+            AvailableContracts = _contracts.Draw(6);
 
             // Create players
-            _players = new[] {Color.Blue, Color.Green, Color.Red, Color.Yellow}.Select(c => new Player(c)).Shuffle();
+            _players =
+                new[] {Color.Blue, Color.Green, Color.Red, Color.Yellow}.Shuffle()
+                    .Select((c, idx) => Player.Create(this, c, idx + 1))
+                    .ToList();
+            StartPlayer = _players[0];
+
             // Give each player a starting contract
-            _players.PairWithRandom(Contract.CreateStartingContracts()).ForEach(x=>x.Item1.GainContract(x.Item2));
-            // Grant starting resources
-            _players.ForEach(p =>
-            {
-                p.Camels = 2;
-                p.Coins = 7 + _players.IndexOf(p);
-            });
+            _players.PairWithRandom(Contract.CreateStartingContracts()).ForEach(x => x.Item1.GainContract(x.Item2));
+
+            // Give each player two goals
+            var goalGroups = Goal.CreateAll().Shuffle().Segment(2);
+            _players.PairWithRandom(goalGroups).ForEach(x => x.Item1.Goals = x.Item2.ToList());
         }
 
-        public void StartRound()
+        public void StartGame()
         {
-            
+            Round = 1;
+            do
+            {
+                StartRound();
+                TakeTurns();
+                EndRound();
+            } while (Round <= 5);
         }
+
+        private void StartRound()
+        {
+            _output.Write($"-- Round {Round} --");
+            _players.ForEach(p => p.StartRound());
+            _currentPlayer = StartPlayer;
+            BlackDice = _players.Count + 1;
+        }
+
+        private void TakeTurns()
+        {
+            while (_players.Any(p => p.HasAvailableDice))
+            {
+                _currentPlayer.TakeTurn();
+                _currentPlayer = GetNextPlayer(_currentPlayer);
+            }
+        }
+
+        private void EndRound()
+        {
+            _contracts.AddRange(AvailableContracts);
+            AvailableContracts = _contracts.Draw(6);
+            // clear played dice
+            Actions.OfType<SpaceAction>().ForEach(x => x.Dice.Clear());
+            Round++;
+        }
+
+        private Player GetNextPlayer(Player player)
+        {
+            var nextIdx = _players.IndexOf(player) + 1;
+            if (nextIdx >= _players.Count) nextIdx = 0;
+            return _players[nextIdx];
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            _mapLocations.Values.Select(x => x.ToString()).Where(x => x != null).ForEach(x => sb.AppendLine(x));
+            var contracts = AvailableContracts.Select((c, idx) => new {idx = idx + 1, c}).Select(x => $"{x.idx}:{x.c}");
+            sb.AppendLine($"Contracts: {contracts.ToDelimitedString(" | ")}");
+            return sb.ToString();
+        }
+
+        public MapLocation GetMapSpace(Location location)
+        {
+            return _mapLocations[location];
+        }
+
+        public void Output(string s)
+        {
+            _output.Write(s);
+        }
+
+        public Contract DrawBonusContract()
+        {
+            return _contracts.Draw();
+        }
+
+        public T GetActionSpace<T>() where T:SpaceAction
+        {
+            return Actions.OfType<T>().SingleOrDefault();
+        }
+
+        public void DiscardContract(Contract contract)
+        {
+            _contracts.Add(contract);
+        }
+
+        public IEnumerable<ContractSpace> GetContractSpaces()
+        {
+            return AvailableContracts.Select((c, idx) => new ContractSpace {Value = idx + 1, Contract = c});
+        }
+
+        public MoneyBagSpace MoneyBagSpace { get;  } = new MoneyBagSpace();
     }
 }

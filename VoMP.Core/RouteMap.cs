@@ -116,7 +116,7 @@ namespace VoMP.Core
             return list;
         }
 
-        public List<Route> BestPath(Location start, params Location[] targets)
+        public List<Route> BestPath(Location start, IEnumerable<Location> targets)
         {
             var permutations = GeneratePermutations(targets).ToList();
             return permutations

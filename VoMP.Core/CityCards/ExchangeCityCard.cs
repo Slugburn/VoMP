@@ -1,44 +1,44 @@
-﻿using System.Diagnostics;
-
-namespace VoMP.Core.CityCards
+﻿namespace VoMP.Core.CityCards
 {
     public class ExchangeCityCard : ICityCard
     {
-        private readonly Cost _cost;
-        private readonly Reward _reward;
+        public Cost Cost { get; }
+        public Reward Reward { get; }
 
         public ExchangeCityCard(Cost cost, Reward reward)
         {
-            _cost = cost;
-            _reward = reward;
+            Cost = cost;
+            Reward = reward;
         }
 
         public override string ToString()
         {
-            return $"{_cost} }} {_reward}";
+            return $"{Cost}->{Reward}";
         }
 
-        public int MaxValue(Player player, bool reversed)
+        public int OptimumValue(Player player)
         {
-            Debug.Assert(!reversed);
             for (var value = 6; value > 0; value--)
-                if (player.CanPay(GetCost(value, false)))
+                if (player.CanPay(GetCost(value)))
                     return value;
             return 0;
         }
 
-        public bool IsReversible { get; } = false;
-
-        public Cost GetCost(int dieValue, bool reversed)
+        public Cost GetCost(int dieValue)
         {
-            Debug.Assert(!reversed);
-            return _cost.Multiply(dieValue);
+            return Cost.Multiply(dieValue);
         }
 
-        public Reward GetReward(int dieValue, bool reversed)
+        public Reward GetReward(Player player, int dieValue)
         {
-            Debug.Assert(!reversed);
-            return _reward.Multiply(dieValue);
+            return Reward.Multiply(dieValue);
+        }
+
+        public bool CanGenerate(Player player, ResourceType resourceType)
+        {
+            return Reward.TradingPostBonus > 0 
+                ? player.HasTradingPostBonusFor(resourceType) : 
+                Reward.CanReward(resourceType);
         }
     }
 }
