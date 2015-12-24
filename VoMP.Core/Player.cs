@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using VoMP.Core.Actions;
 using VoMP.Core.Behavior;
 using VoMP.Core.Behavior.Choices;
+using VoMP.Core.Behavior.Choices.Bonus;
 using VoMP.Core.Extensions;
 
 namespace VoMP.Core
@@ -121,6 +122,8 @@ namespace VoMP.Core
                 GainBlackDie();
             if (reward.Good > 0)
                 GainReward(_behavior.ChooseGoodsToGain(this, reward.Good), "gaining goods");
+            if (reward.UniqueGood > 0)
+                GainReward(_behavior.ChooseUniqueGoodsToGain(this, reward.UniqueGood), "gaining goods");
             if (reward.Move > 0)
             {
                 var path = _behavior.GetMovePath(this, reward.Move);
@@ -161,20 +164,14 @@ namespace VoMP.Core
             HasTakenActionThisTurn = false;
             while (AvailableDice.Any())
             {
-                var validActions = GetValidActions().ToList();
-                var choice = _behavior.ChooseAction(this, validActions);
+                var choice = _behavior.ChooseAction(this);
                 if (choice == null)
                 {
                     if (HasTakenActionThisTurn) break;
-                    choice = new MoneyBag(this, Game.MoneyBagSpace, AvailableDice.First());
+                    choice = new MoneyBag(this, Game.MoneyBagSpace, AvailableDice.GetLowestDie());
                 }
                 choice.Execute();
             }
-        }
-
-        private IEnumerable<IAction> GetValidActions()
-        {
-            return Game.Actions.Where(a => a.IsValid(this));
         }
 
         public bool HasTradingPost(Location location)
@@ -241,6 +238,13 @@ namespace VoMP.Core
             Game.Output($"{Color,-6}: {s}");
         }
 
+        public void Debug(string s)
+        {
+            if (!HasTakenActionThisTurn)
+                Game.Debug($"{Color,-6}: [DEBUG] {s}");
+        }
+
+
         public List<Route> GetBestPath()
         {
             // stop traveling if all trading posts have been build
@@ -255,15 +259,15 @@ namespace VoMP.Core
             return noTradingPost.Select(t => RouteMap.ShortestPath(pawnAt, t)).OrderBy(p => p.Count).First();
         }
 
-        public void PlayDice(IList<Die> dice, SpaceAction action)
+        public void PlayDice(IList<Die> dice, ActionSpace space)
         {
-            Output($"plays {dice.ToDelimitedString("")} on {action}");
-            var cost = action.OccupancyCost(dice);
+            Output($"plays {dice.ToDelimitedString("")} on {space}");
+            var cost = space.OccupancyCost(dice);
             if (cost.Coin > 0)
-                PayCost(cost, $"play on occupied {action} space");
+                PayCost(cost, $"play on occupied {space} space");
 
             TakeDice(dice);
-            action.Dice.AddRange(dice);
+            space.PlayDice(dice);
         }
 
         public Reward ChooseCamelOrCoin(int count)
@@ -271,16 +275,15 @@ namespace VoMP.Core
             return _behavior.ChooseCamelOrCoin(this, count);
         }
 
-        public List<Die> GetDiceAvailableFor(SpaceAction space)
+        public List<Die> GetDiceAvailableFor(ActionSpace space)
         {
             var availableDice = AvailableDice;
-            var playerColorAlreadyPlayedInSpace = space.Dice.Any(x => x.Color == Color);
-            if (playerColorAlreadyPlayedInSpace)
+            if (space.ColorAlreadyPlayed(Color))
                 availableDice = availableDice.Where(d => d.Color != Color).ToList();
             return availableDice;
         }
 
-        public bool CanPlayInActionSpace(SpaceAction space)
+        public bool CanPlayInActionSpace(ActionSpace space)
         {
             // A player can only take one space action per turn
             if (HasTakenActionThisTurn) return false;
@@ -289,7 +292,7 @@ namespace VoMP.Core
             return availableDice.Count >= space.RequiredDice;
         }
 
-        public Cost GetOccupancyCost(SpaceAction space, IEnumerable<Die> dice)
+        public Cost GetOccupancyCost(ActionSpace space, IEnumerable<Die> dice)
         {
             return space.IsOccupied ?  new Cost {Coin =  dice.MinValue()} : Cost.None;
         }
@@ -298,5 +301,42 @@ namespace VoMP.Core
         {
             return GetTradingPostBonusSpaces().Any(x => x.CityBonus.Reward.CanReward(resourceType));
         }
+
+        public void ScoreEndOfGame()
+        {
+            var coins = Resources.Coin;
+            if (coins >= 10)
+            {
+                var vpForCoins = coins / 10;
+                GainReward(new Reward {Vp = vpForCoins}, $"having {coins} coins" );
+            }
+            Goals.ForEach(g =>
+            {
+                if (HasTradingPost(g.Location1) && HasTradingPost(g.Location2))
+                    GainReward(new Reward {Vp=g.Vp}, $"reaching {g.Location1} and {g.Location2}");
+            });
+            var targets = Goals.SelectMany(g => new[] {g.Location1, g.Location2}).Distinct();
+            var targetsReached = targets.Intersect(TradingPosts).ToList();
+            var goalScore = new int[] {0, 1, 3, 6, 10}[targetsReached.Count];
+            GainReward(new Reward {Vp=goalScore}, $"reaching {targetsReached.ToDelimitedString()}" );
+            if (TradingPosts.Contains(Location.Beijing))
+            {
+                var index = Game.GetMapSpace(Location.Beijing).TradingPosts.IndexOf(Color);
+                var beijingScore = new[] {10,7,4,1}[index];
+                var position = new[] {"first", "second", "third", "fourth"}[index];
+                GainReward(new Reward {Vp=beijingScore},$"reaching Beijing {position}");
+                var goodCount = Resources.Gold + Resources.Silk + Resources.Pepper;
+                if (goodCount > 1)
+                {
+                    var vpForGoods = goodCount/2;
+                    GainReward(new Reward {Vp=vpForGoods}, $"having {goodCount} goods");
+                }
+            }
+
+            var completedContractCount = CompletedContracts.Count;
+            if (completedContractCount == Game.GetPlayers().Max(p=>p.CompletedContracts.Count))
+                GainReward(new Reward {Vp=7}, $"completing the most contracts ({completedContractCount})");
+        }
+
     }
 }

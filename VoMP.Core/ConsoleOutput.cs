@@ -8,5 +8,10 @@ namespace VoMP.Core
         {
             Console.WriteLine(o);
         }
+
+        public void WriteDebug(object o)
+        {
+            Console.WriteLine(o);
+        }
     }
 }

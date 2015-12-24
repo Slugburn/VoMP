@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using VoMP.Core.Actions;
@@ -38,7 +39,7 @@ namespace VoMP.Core
             cityCardLocations.PairWithRandom(CityCard.CreateAll())
                 .ForEach(t => _mapLocations[t.Item1].Actions.Add(new LargeCityAction(t.Item1, t.Item2)));
 
-            // Create list of actions
+            // Create list of action spaces
             Actions = _mapLocations.Values.SelectMany(l => l.Actions)
                 .Concat(new IAction[] {new TakeFiveCoinsSpace(), new KhansFavorSpace(), new GoldBazaarSpace(), new SilkBazaarSpace(), new PepperBazaarSpace(), new CamelBazaarSpace(), new TakeContractSpace(), new TravelSpace()})
                 .ToList();
@@ -71,6 +72,13 @@ namespace VoMP.Core
                 TakeTurns();
                 EndRound();
             } while (Round <= 5);
+            _output.Write("-- Score --");
+            _players.ForEach(p => p.ScoreEndOfGame());
+        }
+
+        public IEnumerable<Player> GetPlayers()
+        {
+            return _players;
         }
 
         private void StartRound()
@@ -92,11 +100,13 @@ namespace VoMP.Core
 
         private void EndRound()
         {
+            Round++;
+            if (Round > 5) return;
             _contracts.AddRange(AvailableContracts);
             AvailableContracts = _contracts.Draw(6);
             // clear played dice
-            Actions.OfType<SpaceAction>().ForEach(x => x.Dice.Clear());
-            Round++;
+            Actions.OfType<ActionSpace>().ForEach(x => x.ClearDice());
+            MoneyBagSpace.Dice.Clear();
         }
 
         private Player GetNextPlayer(Player player)
@@ -125,12 +135,17 @@ namespace VoMP.Core
             _output.Write(s);
         }
 
+        public void Debug(string s)
+        {
+            _output.WriteDebug(s);
+        }
+
         public Contract DrawBonusContract()
         {
             return _contracts.Draw();
         }
 
-        public T GetActionSpace<T>() where T:SpaceAction
+        public T GetActionSpace<T>() where T:ActionSpace
         {
             return Actions.OfType<T>().SingleOrDefault();
         }
@@ -146,5 +161,6 @@ namespace VoMP.Core
         }
 
         public MoneyBagSpace MoneyBagSpace { get;  } = new MoneyBagSpace();
+
     }
 }

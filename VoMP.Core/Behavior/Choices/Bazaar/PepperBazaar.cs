@@ -3,15 +3,15 @@ using VoMP.Core.Actions;
 
 namespace VoMP.Core.Behavior.Choices.Bazaar
 {
-    internal class PepperBazaar : BazaarBase
+    public class PepperBazaar : BazaarBase
     {
         public PepperBazaar(Player player) : base(player, player.Game.GetActionSpace<PepperBazaarSpace>())
         {
         }
 
-        protected override Reward GetReward(int value)
+        public override Reward GetReward()
         {
-            switch (value)
+            switch (Value)
             {
                 case 1:
                     return new Reward { Pepper = 1 };
@@ -26,7 +26,7 @@ namespace VoMP.Core.Behavior.Choices.Bazaar
                 case 6:
                     return new Reward { Pepper = 4 };
                 default:
-                    throw new InvalidEnumArgumentException(nameof(value));
+                    throw new InvalidEnumArgumentException(nameof(Value));
             }
         }
     }

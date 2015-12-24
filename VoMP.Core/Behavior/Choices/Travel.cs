@@ -5,7 +5,7 @@ using VoMP.Core.Extensions;
 
 namespace VoMP.Core.Behavior.Choices
 {
-    public class Travel : IActionChoice
+    public class Travel : ISpaceActionChoice
     {
         private readonly Dictionary<int, int> _travelCost = new Dictionary<int, int>()
         {
@@ -18,7 +18,7 @@ namespace VoMP.Core.Behavior.Choices
         };
 
         private readonly Player _player;
-        public SpaceAction Space { get; }
+        public ActionSpace Space { get; }
         public List<Die> Dice { get; set; }
         public List<Route> Path { get; set; }
 
@@ -34,7 +34,7 @@ namespace VoMP.Core.Behavior.Choices
                 throw new InvalidOperationException();
             if (Dice.Count < 2)
                 throw new InvalidOperationException();
-            if (Dice.GetLowest().Value < Path.Count)
+            if (Dice.MinValue() < Path.Count)
                 throw new InvalidOperationException();
             _player.PlayDice(Dice, Space);
             var cost = GetCost(Path);
@@ -53,6 +53,18 @@ namespace VoMP.Core.Behavior.Choices
         public bool IsValid()
         {
             return _player.CanPlayInActionSpace(Space);
+        }
+
+        public Cost GetCost()
+        {
+            if (Dice == null || Path == null)
+                throw new InvalidOperationException();
+            return GetCost(Path).Add(_player.GetOccupancyCost(Space, Dice)).Add(Path.GetCost());
+        }
+
+        public Reward GetReward()
+        {
+            return new Reward {Move = Path.Count};
         }
     }
 }

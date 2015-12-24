@@ -9,10 +9,5 @@ namespace VoMP.Core.Actions
         }
 
         public List<Die> Dice { get; } = new List<Die>();
-
-        public override bool IsValid(Player player)
-        {
-            return true;
-        }
     }
 }

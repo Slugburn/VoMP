@@ -1,7 +1,7 @@
 ﻿using System;
 using VoMP.Core.Actions;
 
-namespace VoMP.Core.Behavior.Choices
+namespace VoMP.Core.Behavior.Choices.Bonus
 {
     public class MoneyBag : IActionChoice
     {

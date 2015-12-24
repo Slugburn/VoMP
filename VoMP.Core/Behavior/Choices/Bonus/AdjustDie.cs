@@ -1,4 +1,6 @@
-﻿namespace VoMP.Core.Behavior.Choices
+﻿using System.Collections.Generic;
+
+namespace VoMP.Core.Behavior.Choices.Bonus
 {
     public class AdjustDie : IActionChoice
     {

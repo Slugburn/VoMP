@@ -1,37 +1,55 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using VoMP.Core.Actions;
 using static VoMP.Core.ResourceType;
 
 namespace VoMP.Core.Behavior.Choices
 {
-    class KhansFavor : IActionChoice
+    public class KhansFavor : ISpaceActionChoice
     {
         private readonly Player _player;
-        private readonly KhansFavorSpace _space;
-        private readonly ResourceType _resourceType;
-        private readonly Die _die;
 
-        public KhansFavor(Player player, KhansFavorSpace space, ResourceType resourceType, Die die)
+        public KhansFavor(Player player)
         {
             _player = player;
-            _space = space;
-            _resourceType = resourceType;
-            _die = die;
+            Space = player.Game.GetActionSpace<KhansFavorSpace>();
         }
+
+        public KhansFavorSpace Space { get; }
+        public ResourceType ResourceType { get; set; }
+        public Die Die { get; set; }
 
         public void Execute()
         {
-            _player.PlayDice(new[] { _die }, _space);
-            var reward = new Reward { Camel = 2, Gold = _resourceType == Gold ? 1 : 0, Silk = _resourceType == Silk ? 1 : 0, Pepper = _resourceType == Pepper ? 1 : 0 };
-            _player.GainReward(reward, _space.Description);
+            if (Die == null)
+                throw new InvalidOperationException("Die value has not been specified");
+            _player.PlayDice(new[] {Die}, Space);
+            var reward = GetReward();
+            _player.GainReward(reward, Space.Description);
             _player.HasTakenActionThisTurn = true;
+        }
+
+        public Cost GetCost()
+        {
+            return Cost.None;
+        }
+
+        public Reward GetReward()
+        {
+            return new Reward
+            {
+                Camel = 2,
+                Gold = ResourceType == Gold ? 1 : 0,
+                Silk = ResourceType == Silk ? 1 : 0,
+                Pepper = ResourceType == Pepper ? 1 : 0
+            };
         }
 
         public bool IsValid()
         {
-            return _player.CanPlayInActionSpace(_space)
-                   && _space.Dice.Count < 4
-                   && _player.AvailableDice.Any(d => d.Value >= _space.MinimumValue);
+            return _player.CanPlayInActionSpace(Space)
+                   && Space.DiceCount < 4
+                   && _player.AvailableDice.Any(d => d.Value >= Space.MinimumValue);
         }
     }
 }

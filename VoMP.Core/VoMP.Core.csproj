@@ -30,6 +30,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.5\lib\net45-full\log4net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -49,26 +53,26 @@
     <Compile Include="Actions\MoneyBagSpace.cs" />
     <Compile Include="Actions\PepperBazaarSpace.cs" />
     <Compile Include="Actions\SilkBazaarSpace.cs" />
-    <Compile Include="Actions\SpaceAction.cs" />
+    <Compile Include="Actions\ActionSpace.cs" />
     <Compile Include="Actions\TakeContractSpace.cs" />
     <Compile Include="Actions\TakeFiveCoinsSpace.cs" />
     <Compile Include="Actions\TravelSpace.cs" />
     <Compile Include="Behavior\AiBehavior.cs" />
     <Compile Include="Behavior\AiState.cs" />
-    <Compile Include="Behavior\Choices\AdjustDie.cs" />
     <Compile Include="Behavior\Choices\Bazaar\BazaarBase.cs" />
     <Compile Include="Behavior\Choices\Bazaar\CamelBazaar.cs" />
     <Compile Include="Behavior\Choices\Bazaar\GoldBazaar.cs" />
     <Compile Include="Behavior\Choices\Bazaar\PepperBazaar.cs" />
     <Compile Include="Behavior\Choices\Bazaar\SilkBazaar.cs" />
-    <Compile Include="Behavior\Choices\BuyBlackDie.cs" />
+    <Compile Include="Behavior\Choices\Bonus\AdjustDie.cs" />
+    <Compile Include="Behavior\Choices\Bonus\BuyBlackDie.cs" />
+    <Compile Include="Behavior\Choices\Bonus\CompleteContract.cs" />
+    <Compile Include="Behavior\Choices\Bonus\MoneyBag.cs" />
+    <Compile Include="Behavior\Choices\Bonus\RerollDie.cs" />
     <Compile Include="Behavior\Choices\CityAction.cs" />
-    <Compile Include="Behavior\Choices\CompleteContract.cs" />
-    <Compile Include="Behavior\Choices\GrandBazaar.cs" />
     <Compile Include="Behavior\Choices\IActionChoice.cs" />
+    <Compile Include="Behavior\Choices\ISpaceActionChoice.cs" />
     <Compile Include="Behavior\Choices\KhansFavor.cs" />
-    <Compile Include="Behavior\Choices\MoneyBag.cs" />
-    <Compile Include="Behavior\Choices\RerollDie.cs" />
     <Compile Include="Behavior\Choices\TakeContracts.cs" />
     <Compile Include="Behavior\Choices\TakeFiveCoins.cs" />
     <Compile Include="Behavior\Choices\Travel.cs" />
@@ -112,7 +116,9 @@
     <Compile Include="Actions\IAction.cs" />
     <Compile Include="Actions\LargeCityAction.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

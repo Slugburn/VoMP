@@ -1,4 +1,4 @@
-﻿namespace VoMP.Core.Behavior.Choices
+﻿namespace VoMP.Core.Behavior.Choices.Bonus
 {
     public class BuyBlackDie : IActionChoice
     {

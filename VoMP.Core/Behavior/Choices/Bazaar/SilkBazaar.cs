@@ -9,9 +9,9 @@ namespace VoMP.Core.Behavior.Choices.Bazaar
         {
         }
 
-        protected override Reward GetReward(int value)
+        public override Reward GetReward()
         {
-            switch (value)
+            switch (Value)
             {
                 case 1:
                     return new Reward { Silk = 1 };
@@ -26,7 +26,7 @@ namespace VoMP.Core.Behavior.Choices.Bazaar
                 case 6:
                     return new Reward { Silk = 4 };
                 default:
-                    throw new InvalidEnumArgumentException(nameof(value));
+                    throw new InvalidEnumArgumentException(nameof(Value));
             }
         }
     }

@@ -18,7 +18,7 @@ namespace VoMP.Core
                 new CityBonus(new Reward {Camel = 3}), 
                 new CityBonus(new Reward {OtherCityBonus = 1}), 
                 new CityBonus(new Reward {Vp = 3}), 
-                new CityBonus(new Reward {Good = 2}), 
+                new CityBonus(new Reward {UniqueGood = 2}), 
                 new CityBonus(new Reward {Coin = 5}), 
                 new CityBonus(new Reward {Camel = 1, Coin = 3}), 
             };

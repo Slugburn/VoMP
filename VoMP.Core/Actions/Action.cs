@@ -9,8 +9,6 @@ namespace VoMP.Core.Actions
             Description = description;
         }
 
-        public abstract bool IsValid(Player player);
-
         public override string ToString()
         {
             return Description;

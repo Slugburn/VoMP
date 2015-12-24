@@ -3,7 +3,7 @@ using VoMP.Core.CityCards;
 
 namespace VoMP.Core.Actions
 {
-    public class LargeCityAction : SpaceAction
+    public class LargeCityAction : ActionSpace
     {
         public ICityCard Card { get; }
         private readonly Location _location;
@@ -12,19 +12,6 @@ namespace VoMP.Core.Actions
         {
             _location = location;
             Card = cityCard;
-        }
-
-        public void Execute(Player player)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override bool IsValid(Player player)
-        {
-            return base.IsValid(player)
-                   && !Dice.Any()
-                   && player.HasTradingPost(_location)
-                   && (Card.OptimumValue(player) > 0 || ((Card as OptionCityCard)?.MaxValue(player,1) > 0));
         }
     }
 }

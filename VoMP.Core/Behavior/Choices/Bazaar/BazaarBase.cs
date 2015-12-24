@@ -4,7 +4,7 @@ using VoMP.Core.Actions;
 
 namespace VoMP.Core.Behavior.Choices.Bazaar
 {
-    internal abstract class BazaarBase : IActionChoice
+    public abstract class BazaarBase : ISpaceActionChoice
     {
         private readonly Player _player;
 
@@ -23,7 +23,7 @@ namespace VoMP.Core.Behavior.Choices.Bazaar
         {
             if (Dice == null) throw new InvalidOperationException();
             _player.PlayDice(Dice, Space);
-            _player.GainReward(GetReward(Value), Space.Description);
+            _player.GainReward(GetReward(), Space.Description);
             _player.HasTakenActionThisTurn = true;
         }
 
@@ -32,6 +32,11 @@ namespace VoMP.Core.Behavior.Choices.Bazaar
             return _player.CanPlayInActionSpace(Space);
         }
 
-        protected abstract Reward GetReward(int value);
+        public Cost GetCost()
+        {
+            return _player.GetOccupancyCost(Space, Dice);
+        }
+
+        public abstract Reward GetReward();
     }
 }

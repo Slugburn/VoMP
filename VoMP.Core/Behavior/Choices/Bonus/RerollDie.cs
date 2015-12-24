@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace VoMP.Core.Behavior.Choices
+﻿namespace VoMP.Core.Behavior.Choices.Bonus
 {
     public class RerollDie : IActionChoice
     {

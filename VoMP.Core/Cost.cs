@@ -1,11 +1,12 @@
-﻿using System.CodeDom;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace VoMP.Core
 {
     public class Cost
     {
+        public static Cost None { get; } = new Cost();
+
         public int Camel { get; set; }
         public int Gold { get; set; }
         public int Silk { get; set; }
@@ -13,7 +14,8 @@ namespace VoMP.Core
         public int Coin { get; set; }
         public int Good { get; set; }
         public int Vp { get; set; }
-        public static Cost None { get; } = new Cost();
+        public int Die { get; set; }
+
 
         public int Rating => Camel + Coin + Good + Pepper + Silk * 2 + Gold * 3;
 
@@ -25,7 +27,15 @@ namespace VoMP.Core
         public override string ToString()
         {
             var descriptions = GetDescriptions().ToList();
-            return  descriptions.Any() ? string.Join(",", descriptions) : "nothing";
+            switch (descriptions.Count)
+            {
+                case 0:
+                    return "nothing";
+                case 1:
+                    return descriptions.Single();
+                default:
+                    return $"({string.Join(",", descriptions)})";
+            }
         }
 
         private IEnumerable<string> GetDescriptions()
@@ -70,7 +80,8 @@ namespace VoMP.Core
                 Silk = Silk + add.Silk,
                 Pepper = Pepper + add.Pepper,
                 Good = Good + add.Good,
-                Vp = Vp + add.Vp
+                Vp = Vp + add.Vp,
+                Die = Die + add.Die
             };
         }
 
@@ -86,6 +97,11 @@ namespace VoMP.Core
                 Good = Good,
                 Vp = Vp + add.Vp
             };
+        }
+
+        public Cost Subtract(Cost cost)
+        {
+            return Add(cost.Multiply(-1));
         }
     }
 }

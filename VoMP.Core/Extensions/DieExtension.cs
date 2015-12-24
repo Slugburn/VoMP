@@ -6,23 +6,24 @@ namespace VoMP.Core.Extensions
 {
     public static class DieExtension
     {
-        public static Die GetLowest(this IEnumerable<Die> dice, Func<Die, bool> condition = null)
+        public static Die GetLowestDie(this IEnumerable<Die> dice, int atLeast = 1)
         {
-            return condition==null ? dice.OrderBy(d => d.Value).FirstOrDefault() : dice.OrderBy(d => d.Value).FirstOrDefault(condition);
+            return dice.OrderBy(d => d.Value).FirstOrDefault(d => d.Value >= atLeast);
         }
 
-        public static List<Die> GetLowest(this IEnumerable<Die> dice, int count, Func<Die, bool> condition)
+        public static List<Die> GetLowestDice(this IEnumerable<Die> dice, int count, int atLeast = 1)
         {
-            return dice.Where(condition).OrderBy(d => d.Value).Take(count).ToList();
+            return dice.Where(d => d.Value >= atLeast).OrderBy(d => d.Value).Take(count).ToList();
         }
 
-        public static Die GetHighest(this IEnumerable<Die> dice)
+        public static Die GetHighestDie(this IEnumerable<Die> dice)
         {
             return dice.OrderByDescending(d => d.Value).FirstOrDefault();
         }
 
-        public static List<Die> GetHighest(this IEnumerable<Die> dice, int count, Func<Die,bool> condition)
+        public static List<Die> GetHighestDice(this IEnumerable<Die> dice, int count, Func<Die,bool> condition = null)
         {
+            condition = condition ?? (d => true);
             return dice.Where(condition).OrderByDescending(d => d.Value).Take(count).OrderBy(d => d.Value).ToList();
         }
 

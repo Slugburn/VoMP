@@ -6,6 +6,9 @@ namespace VoMP.Core.CityCards
 {
     internal class OptionCityCard : ICityCard
     {
+        private ExchangeCityCard _selectedOption;
+        private List<ExchangeCityCard> _options;
+
         public static OptionCityCard CreateReversible(Cost cost, Reward reward)
         {
             return new OptionCityCard(new[]
@@ -17,52 +20,46 @@ namespace VoMP.Core.CityCards
 
         public OptionCityCard(IEnumerable<ExchangeCityCard> options)
         {
-            Options = options.ToList();
+            _options = options.ToList();
+            _selectedOption = null;
         }
 
-        public List<ExchangeCityCard> Options { get; set; }
+        public void SelectResouce(Player player, ResourceType resourceType)
+        {
+            _selectedOption = _options.SingleOrDefault(o => o.CanGenerate(player, resourceType));
+        }
 
         public int OptimumValue(Player player)
         {
-            return MaxValue(player, 0);
+            return MaxValue(player);
         }
 
         public Cost GetCost(int dieValue)
         {
-            return GetCost(dieValue, 0);
+            return _selectedOption.Cost.Multiply(dieValue);
         }
 
         public Reward GetReward(Player player, int dieValue)
         {
-            return GetReward(dieValue, 0);
+            return _selectedOption.Reward.Multiply(dieValue);
         }
 
         public bool CanGenerate(Player player, ResourceType resourceType)
         {
-            return Options.Any(o=>o.CanGenerate(player, resourceType));
+            return _options.Any(o=>o.CanGenerate(player, resourceType));
         }
 
-        public int MaxValue(Player player, int option)
+        private int MaxValue(Player player)
         {
             for (var value = 6; value > 0; value--)
-                if (player.CanPay(GetCost(value, option)))
+                if (player.CanPay(_selectedOption.Cost.Multiply(value)))
                     return value;
             return 0;
         }
 
-        public Cost GetCost(int dieValue, int option)
-        {
-            return Options[option].Cost.Multiply(dieValue);
-        }
-
-        public Reward GetReward(int dieValue, int option)
-        {
-            return Options[option].Reward.Multiply(dieValue);
-        }
-
         public override string ToString()
         {
-            return Options.ToDelimitedString(" or ");
+            return _options.ToDelimitedString(" or ");
         }
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using VoMP.Core.Actions;
+using VoMP.Core.Extensions;
 
 namespace VoMP.Core.Behavior
 {
@@ -17,14 +18,13 @@ namespace VoMP.Core.Behavior
 
         public List<Route> BestPath { get;  }
         public List<Route> NextMove { get;  }
-        public List<IAction> ValidActions { get; set; }
 
         public Cost ReservedResources { get; private set; } = Cost.None;
         public List<Die> ReservedDice { get; } = new List<Die>();
 
         public Cost Shortfall { get; set; }
 
-        public List<Die> GetDiceAvailableFor(SpaceAction space) => Player.GetDiceAvailableFor(space).Except(ReservedDice).ToList();
+        public List<Die> GetDiceAvailableFor(ActionSpace space) => Player.GetDiceAvailableFor(space).Except(ReservedDice).ToList();
 
         public List<Die> AvailableDice => Player.AvailableDice.Except(ReservedDice).ToList();
 
@@ -46,7 +46,7 @@ namespace VoMP.Core.Behavior
             ReservedResources = ReservedResources.Add(cost);
         }
 
-        public void ReserveDice(List<Die> dice)
+        public void ReserveDice(IEnumerable<Die> dice)
         {
             ReservedDice.AddRange(dice);
         }
@@ -59,6 +59,18 @@ namespace VoMP.Core.Behavior
         public bool PlayerCanPay(Cost cost)
         {
             return Player.CanPay(cost.AllowingFor(ReservedResources));
+        }
+
+        public void Reserve(Cost cost, IEnumerable<Die> dice)
+        {
+            ReserveResources(cost);
+            ReserveDice(dice);
+        }
+
+        public void Unreserve(Cost cost, IEnumerable<Die> dice = null)
+        {
+            ReservedResources.Subtract(cost);
+            dice?.ForEach(d => ReservedDice.Remove(d));
         }
     }
 }

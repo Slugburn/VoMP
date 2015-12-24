@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace VoMP.Core
 {
@@ -6,18 +7,20 @@ namespace VoMP.Core
     {
         public int Camel { get; set; }
         public int Coin { get; set; }
-        public int Move { get; set; }
-        public int Contract { get; set; }
-        public int Good { get; set; }
-        public int Die { get; set; }
-        public int Vp { get; set; }
         public int Gold { get; set; }
         public int Silk { get; set; }
         public int Pepper { get; set; }
+        public int Good { get; set; }
+        public int UniqueGood { get; set; }
 
+        public int Move { get; set; }
+        public int Contract { get; set; }
+        public int Die { get; set; }
+        public int Vp { get; set; }
         public int OtherCityBonus { get; set; }
-
         public int TradingPostBonus { get; set; }
+
+        public int Rating => Camel + Coin + Move*3 + Gold*3 + Silk*2 + Pepper + Good*3 + UniqueGood*2 + Vp + Die*3 + Move*6 + OtherCityBonus*3;
 
         public ResourceBag GetResources()
         {
@@ -39,7 +42,7 @@ namespace VoMP.Core
                 Camel = Camel,
                 Coin = Coin,
                 Gold = Gold,
-                Good = Good,
+                Good = Good + UniqueGood,
                 Pepper = Pepper,
                 Silk = Silk,
                 Vp = Vp
@@ -48,7 +51,10 @@ namespace VoMP.Core
 
         public override string ToString()
         {
-            return string.Join(",", GetDescriptions());
+            var descriptions = GetDescriptions().ToList();
+            if (descriptions.Count == 1)
+                return descriptions.Single();
+            return $"({string.Join(",", descriptions)})";
         }
 
         private IEnumerable<string> GetDescriptions()
@@ -63,6 +69,8 @@ namespace VoMP.Core
                 yield return Contract == 1 ? "Contract" : $"{Contract} Contracts";
             if (Good > 0)
                 yield return Good == 1 ? "1 Good" : $"{Good} Goods";
+            if (UniqueGood > 0)
+                yield return $"{UniqueGood} unique Goods";
             if (Die > 0)
                 yield return Die == 1 ? "Black Die" : $"{Die} Black Dice";
             if (Vp > 0)
@@ -89,6 +97,7 @@ namespace VoMP.Core
                 Die = Die*factor,
                 Gold = Gold*factor,
                 Good = Good*factor,
+                UniqueGood = UniqueGood*factor,
                 Move = Move*factor,
                 Pepper = Pepper*factor,
                 Silk = Silk*factor,
@@ -107,11 +116,11 @@ namespace VoMP.Core
                     case ResourceType.Coin:
                     return Coin + OtherCityBonus > 0;
                     case ResourceType.Gold:
-                    return Gold + Good + OtherCityBonus > 0;
+                    return Gold + Good + UniqueGood + OtherCityBonus > 0;
                     case ResourceType.Silk:
-                    return Silk + Good + OtherCityBonus > 0;
+                    return Silk + Good + UniqueGood + OtherCityBonus > 0;
                 case ResourceType.Pepper:
-                    return Pepper + Good + OtherCityBonus > 0;
+                    return Pepper + Good + UniqueGood + OtherCityBonus > 0;
                 case ResourceType.Vp:
                     return Vp + OtherCityBonus > 0;
                 default:

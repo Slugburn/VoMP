@@ -2,6 +2,7 @@
 {
     public enum ResourceType
     {
+        Unknown = 0,
         Camel,
         Coin,
         Gold,

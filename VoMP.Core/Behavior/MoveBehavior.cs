@@ -2,6 +2,7 @@
 using VoMP.Core.Actions;
 using VoMP.Core.Behavior.Choices;
 using VoMP.Core.Behavior.Choices.Bazaar;
+using VoMP.Core.Behavior.Choices.Bonus;
 using VoMP.Core.Extensions;
 
 namespace VoMP.Core.Behavior
@@ -14,9 +15,14 @@ namespace VoMP.Core.Behavior
             if (nextMove == null) return null;
             
             // Reserve resources needed to complete next move
-            state.ReserveResources(nextMove.GetCost());
+            var cost = nextMove.GetCost();
+            state.ReserveResources(cost);
 
             var moveNeeded = nextMove.Count;
+
+            var player = state.Player;
+            player.Debug($"wants to move {moveNeeded} spaces to {nextMove.Last().End} and needs {cost}");
+
             if (moveNeeded > 1) return Travel(state);
 
             return MoveOne(state) ?? Travel(state);
@@ -32,7 +38,7 @@ namespace VoMP.Core.Behavior
 
             if (!travel.IsValid()) return null;
 
-            var dice = player.GetDiceAvailableFor(travel.Space).GetLowest(2, d=>d.Value >= moveNeeded);
+            var dice = player.GetDiceAvailableFor(travel.Space).GetLowestDice(2, moveNeeded);
             if (dice.Count == 0) return null;
             if (dice.Count == 1) return ImproveDice(state, travel.Space, moveNeeded);
 
@@ -57,7 +63,7 @@ namespace VoMP.Core.Behavior
             var moveCost = nextMove.GetCost();
 
             // does one of our current contracts allow us to move 1?
-            var completeContract = CompleteContractBehavior.CompleteContract(state, x => x.Reward.Move > 0, moveCost);
+            var completeContract = CompleteContractBehavior.CompleteContract(state, x => x.Reward.Move > 0);
             if (completeContract != null) return completeContract;
 
             // can we use the gold bazaar to move?
@@ -73,7 +79,7 @@ namespace VoMP.Core.Behavior
             var player = state.Player;
             var goldBazaar = new GoldBazaar(player) {Value = 5};
             if (!goldBazaar.IsValid()) return null;
-            var dice = player.AvailableDice.GetLowest(3, d => d.Value >= 5);
+            var dice = player.AvailableDice.GetLowestDice(3, 5);
             goldBazaar.Dice = dice;
             if (dice.Count < 2) return null;
             var cost = moveCost.Add(player.GetOccupancyCost(goldBazaar.Space, dice));
@@ -85,14 +91,14 @@ namespace VoMP.Core.Behavior
             return player.CanPay(cost) ? goldBazaar : GenerateResourcesBehavior.GenerateResources(state, cost);
         }
 
-        private static IActionChoice ImproveDice(AiState state, SpaceAction space, int targetValue)
+        private static IActionChoice ImproveDice(AiState state, ActionSpace space, int targetValue)
         {
             var player = state.Player;
             var availableDice = state.GetDiceAvailableFor(space);
-            var oneLessThanTarget = availableDice.GetLowest(space.RequiredDice, d => d.Value >= targetValue - 1);
+            var oneLessThanTarget = availableDice.GetLowestDice(space.RequiredDice, targetValue - 1);
             if (oneLessThanTarget.Count == space.RequiredDice)
             {
-                var adjustDie = new AdjustDie(player) {Die = oneLessThanTarget.GetLowest(), Direction = 1};
+                var adjustDie = new AdjustDie(player) {Die = oneLessThanTarget.GetLowestDie(), Direction = 1};
                 if (adjustDie.IsValid() && state.PlayerCanPay(adjustDie.Cost)) return adjustDie;
             }
             if (availableDice.Any(d => d.Value == 1))
