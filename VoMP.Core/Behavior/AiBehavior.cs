@@ -25,7 +25,7 @@ namespace VoMP.Core.Behavior
             if (completeContract != null) return completeContract;
 
             // Score VP
-            var cityAction = GenerateResourcesBehavior.CityAction(State, ResourceType.Vp, r => r.Vp);
+            var cityAction = GenerateResourcesBehavior.GenerateVp(State);
             if (cityAction != null)
                 return cityAction;
 

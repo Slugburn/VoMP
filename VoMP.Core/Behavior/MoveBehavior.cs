@@ -13,19 +13,21 @@ namespace VoMP.Core.Behavior
         {
             var nextMove = state.NextMove;
             if (nextMove == null) return null;
-            
-            // Reserve resources needed to complete next move
-            var cost = nextMove.GetCost();
-            state.ReserveResources(cost);
-
             var moveNeeded = nextMove.Count;
 
             var player = state.Player;
-            player.Debug($"wants to move {moveNeeded} spaces to {nextMove.Last().End} and needs {cost}");
 
-            if (moveNeeded > 1) return Travel(state);
+            // Reserve resources needed to complete next move
+            var moveCost = nextMove.GetCost();
+            var reason = $"move {moveNeeded} spaces from {nextMove.First().Start} to {nextMove.Last().End}";
+            var reserveResourcesChoice = new ReserveResourcesChoiceParam(() => DoMove(state), reason) {Cost = moveCost};
+            return state.MakeChoiceWithReservedResources(reserveResourcesChoice);
+        }
 
-            return MoveOne(state) ?? Travel(state);
+        private static IActionChoice DoMove(AiState state)
+        {
+            var moveNeeded = state.NextMove.Count;
+            return moveNeeded > 1 ? Travel(state) : (MoveOne(state) ?? Travel(state));
         }
 
         private static IActionChoice Travel(AiState state)
@@ -44,17 +46,12 @@ namespace VoMP.Core.Behavior
 
             travel.Dice = dice;
 
-            // Must be able to pay travel cost + occupancy cost + move cost
-            var travelCost = travel.GetCost(nextMove);
-            var occupancyCost = player.GetOccupancyCost(travel.Space, dice);
-            var moveCost = nextMove.GetCost();
-            var totalCost = travelCost.Add(occupancyCost).Add(moveCost);
-            if (player.CanPay(totalCost)) return travel;
+            var cost = travel.GetCost().Add(nextMove.GetCost());
+            if (state.PlayerCanPay(cost)) return travel;
 
             // Need to be able to generate resources in order to travel
-            if (player.AvailableDice.Count > dice.Count)
-                state.ReserveDice(dice);
-            return GenerateResourcesBehavior.GenerateResources(state, totalCost);
+            var p = new ReserveResourcesChoiceParam(()=> GenerateResourcesBehavior.GenerateResources(state, cost, "travel"), "travel") {Dice = dice};
+            return state.MakeChoiceWithReservedResources(p);
         }
 
         private static IActionChoice MoveOne(AiState state)
@@ -88,7 +85,7 @@ namespace VoMP.Core.Behavior
                 var improveDice = ImproveDice(state, goldBazaar.Space, 5);
                 return player.CanPay(cost) ?  improveDice : null;
             }
-            return player.CanPay(cost) ? goldBazaar : GenerateResourcesBehavior.GenerateResources(state, cost);
+            return player.CanPay(cost) ? goldBazaar : GenerateResourcesBehavior.GenerateResources(state, cost, "visit the gold bazaar");
         }
 
         private static IActionChoice ImproveDice(AiState state, ActionSpace space, int targetValue)
@@ -99,17 +96,18 @@ namespace VoMP.Core.Behavior
             if (oneLessThanTarget.Count == space.RequiredDice)
             {
                 var adjustDie = new AdjustDie(player) {Die = oneLessThanTarget.GetLowestDie(), Direction = 1};
-                if (adjustDie.IsValid() && state.PlayerCanPay(adjustDie.Cost)) return adjustDie;
+                if (adjustDie.IsValid())
+                    return state.PlayerCanPay(adjustDie.Cost) ? adjustDie :GenerateResourcesBehavior.GenerateResources(state, adjustDie.Cost, "adjust die");
             }
             if (availableDice.Any(d => d.Value == 1))
             {
                 var rerollDie = new RerollDie(player) {Die = player.AvailableDice.First(d => d.Value == 1)};
                 if (rerollDie.IsValid())
-                    return state.PlayerCanPay(rerollDie.Cost) ? rerollDie : GenerateResourcesBehavior.GenerateResources(state, rerollDie.Cost);
+                    return state.PlayerCanPay(rerollDie.Cost) ? rerollDie : null;
             }
             var buyBlackDie = new BuyBlackDie(state.Player);
             if (buyBlackDie.IsValid())
-                return state.PlayerCanPay(buyBlackDie.Cost) ? buyBlackDie : GenerateResourcesBehavior.GenerateResources(state, buyBlackDie.Cost);
+                return state.PlayerCanPay(buyBlackDie.Cost) ? buyBlackDie : GenerateResourcesBehavior.GenerateResources(state, buyBlackDie.Cost, "buy black die");
             return null;
         }
     }

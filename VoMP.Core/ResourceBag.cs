@@ -56,6 +56,8 @@ namespace VoMP.Core
 
         public Cost GetShortfall(Cost cost)
         {
+            var availableGoods = Gold + Silk + Pepper;
+            var remainingGoods = Max(availableGoods - cost.Gold + cost.Silk + cost.Pepper, 0);
             return new Cost
             {
                 Camel = Abs(Min(Camel - cost.Camel, 0)),
@@ -63,7 +65,7 @@ namespace VoMP.Core
                 Gold = Abs(Min(Gold - cost.Gold, 0)),
                 Silk = Abs(Min(Silk - cost.Silk, 0)),
                 Pepper = Abs(Min(Pepper - cost.Pepper, 0)),
-                Good = Abs(Min(Gold + Silk + Pepper - (cost.Good + cost.Gold + cost.Silk + cost.Pepper), 0))
+                Good = Abs(Min(remainingGoods - cost.Good, 0))
             };
         }
 
@@ -76,14 +78,14 @@ namespace VoMP.Core
         {
             if (Camel > 0)
                 yield return Camel == 1 ? "1 Camel" : $"{Camel} Camels";
+            if (Coin > 0)
+                yield return Coin == 1 ? "1 Coin" : $"{Coin} Coins";
             if (Gold > 0)
                 yield return $"{Gold} Gold";
             if (Silk > 0)
                 yield return $"{Silk} Silk";
             if (Pepper > 0)
                 yield return $"{Pepper} Pepper";
-            if (Coin > 0)
-                yield return Coin == 1 ? "1 Coin" : $"{Coin} Coins";
             if (Vp > 0)
                 yield return $"{Vp} VP";
         }

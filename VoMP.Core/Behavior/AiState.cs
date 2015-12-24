@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using VoMP.Core.Actions;
+using VoMP.Core.Behavior.Choices;
 using VoMP.Core.Extensions;
 
 namespace VoMP.Core.Behavior
@@ -16,8 +17,8 @@ namespace VoMP.Core.Behavior
 
         public Player Player { get; }
 
-        public List<Route> BestPath { get;  }
-        public List<Route> NextMove { get;  }
+        public List<Route> BestPath { get; }
+        public List<Route> NextMove { get; }
 
         public Cost ReservedResources { get; private set; } = Cost.None;
         public List<Die> ReservedDice { get; } = new List<Die>();
@@ -41,16 +42,6 @@ namespace VoMP.Core.Behavior
             }
         }
 
-        public void ReserveResources(Cost cost)
-        {
-            ReservedResources = ReservedResources.Add(cost);
-        }
-
-        public void ReserveDice(IEnumerable<Die> dice)
-        {
-            ReservedDice.AddRange(dice);
-        }
-
         public void ClearResourceReserves()
         {
             ReservedResources = Cost.None;
@@ -61,16 +52,29 @@ namespace VoMP.Core.Behavior
             return Player.CanPay(cost.AllowingFor(ReservedResources));
         }
 
-        public void Reserve(Cost cost, IEnumerable<Die> dice)
+        public Cost GetShortfall(Cost cost)
         {
-            ReserveResources(cost);
-            ReserveDice(dice);
+            return Player.Resources.GetShortfall(cost.Add(ReservedResources));
         }
 
-        public void Unreserve(Cost cost, IEnumerable<Die> dice = null)
+        public IActionChoice MakeChoiceWithReservedResources(ReserveResourcesChoiceParam p)
         {
-            ReservedResources.Subtract(cost);
-            dice?.ForEach(d => ReservedDice.Remove(d));
+            if (p.Cost != null && p.Cost.Rating > 0)
+            {
+                Player.Debug($"reserves {p.Cost} needed to {p.Reason}");
+                ReservedResources = ReservedResources.Add(p.Cost);
+            }
+            if (p.Dice != null)
+            {
+                Player.Debug($"reserves {p.Dice.ToDelimitedString("")} needed to {p.Reason}");
+                ReservedDice.AddRange(p.Dice);
+            }
+            var choice = p.MakeChoice();
+            if (choice != null) return choice;
+            if (p.Cost != null)
+                ReservedResources.Subtract(p.Cost);
+            p.Dice?.ForEach(d => ReservedDice.Remove(d));
+            return null;
         }
     }
 }

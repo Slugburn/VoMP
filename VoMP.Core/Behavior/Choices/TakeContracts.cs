@@ -12,10 +12,10 @@ namespace VoMP.Core.Behavior.Choices
         private readonly Player _player;
         private readonly TakeContractSpace _space;
 
-        public TakeContracts(Player player, TakeContractSpace space)
+        public TakeContracts(Player player)
         {
             _player = player;
-            _space = space;
+            _space = player.Game.GetActionSpace<TakeContractSpace>();
         }
 
         public void Execute()

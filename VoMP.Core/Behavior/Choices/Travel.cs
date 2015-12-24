@@ -37,14 +37,14 @@ namespace VoMP.Core.Behavior.Choices
             if (Dice.MinValue() < Path.Count)
                 throw new InvalidOperationException();
             _player.PlayDice(Dice, Space);
-            var cost = GetCost(Path);
+            var cost = GetTravelCost(Path);
             _player.PayCost(cost, $"travel {Path.Count} spaces");
             _player.Move(Path);
             _player.HasTakenActionThisTurn = true;
             _player.Game.StartPlayer = _player;
         }
 
-        public Cost GetCost(List<Route> path)
+        public Cost GetTravelCost(List<Route> path)
         {
             var moveRequired = path.Count;
             return new Cost {Coin = _travelCost[moveRequired]};
@@ -59,7 +59,7 @@ namespace VoMP.Core.Behavior.Choices
         {
             if (Dice == null || Path == null)
                 throw new InvalidOperationException();
-            return GetCost(Path).Add(_player.GetOccupancyCost(Space, Dice)).Add(Path.GetCost());
+            return GetTravelCost(Path).Add(_player.GetOccupancyCost(Space, Dice));
         }
 
         public Reward GetReward()

@@ -160,8 +160,7 @@ namespace VoMP.Core
 
         public void TakeTurn()
         {
-            HasBoughtBlackDieThisTurn = false;
-            HasTakenActionThisTurn = false;
+            Debug($"Start Turn - {AvailableDice.ToDelimitedString("")} ({Resources})");
             while (AvailableDice.Any())
             {
                 var choice = _behavior.ChooseAction(this);
@@ -172,6 +171,8 @@ namespace VoMP.Core
                 }
                 choice.Execute();
             }
+            HasBoughtBlackDieThisTurn = false;
+            HasTakenActionThisTurn = false;
         }
 
         public bool HasTradingPost(Location location)
@@ -196,7 +197,7 @@ namespace VoMP.Core
 
         public void PayCost(Cost cost, string sourceDescription)
         {
-            Output($"pays {cost} to {sourceDescription}");
+            Output(cost.Rating > 0 ? $"pays {cost} to {sourceDescription}" : sourceDescription);
             if (cost.Good > 0)
                 cost = _behavior.ChooseGoodsToPay(this, cost);
             Resources = Resources.Subtract(cost);

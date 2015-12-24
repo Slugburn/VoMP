@@ -80,6 +80,7 @@
     <Compile Include="Behavior\GenerateResourcesBehavior.cs" />
     <Compile Include="Behavior\IBehavior.cs" />
     <Compile Include="Behavior\MoveBehavior.cs" />
+    <Compile Include="Behavior\ReserveResourcesChoiceParam.cs" />
     <Compile Include="Behavior\TakeContractsBehavior.cs" />
     <Compile Include="CityBonus.cs" />
     <Compile Include="CityCards\CityCard.cs" />

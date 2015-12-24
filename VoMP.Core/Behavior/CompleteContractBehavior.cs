@@ -18,12 +18,10 @@ namespace VoMP.Core.Behavior
             // choose the easiest to complete contract to get resources for
             var targetContract = contracts.OrderBy(c => player.Resources.GetShortfall(c.Cost).Rating).First();
 
-            player.Debug($"reserves resources needed to complete {targetContract}");
-            state.ReserveResources(targetContract.Cost);
-            var generateResources = GenerateResourcesBehavior.GenerateResources(state, targetContract.Cost);
-            if (generateResources != null) return generateResources;
-            state.Unreserve(targetContract.Cost);
-            return null;
+            string reason = $"complete {targetContract}";
+            var cost = targetContract.Cost;
+            var param = new ReserveResourcesChoiceParam(()=> GenerateResourcesBehavior.GenerateResources(state, cost, reason), reason) {Cost = cost};
+            return state.MakeChoiceWithReservedResources(param);
         }
     }
 }

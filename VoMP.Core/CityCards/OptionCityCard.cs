@@ -36,12 +36,12 @@ namespace VoMP.Core.CityCards
 
         public Cost GetCost(int dieValue)
         {
-            return _selectedOption.Cost.Multiply(dieValue);
+            return _selectedOption?.Cost.Multiply(dieValue);
         }
 
         public Reward GetReward(Player player, int dieValue)
         {
-            return _selectedOption.Reward.Multiply(dieValue);
+            return _selectedOption?.Reward.Multiply(dieValue);
         }
 
         public bool CanGenerate(Player player, ResourceType resourceType)

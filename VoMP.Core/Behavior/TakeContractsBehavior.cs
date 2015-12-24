@@ -13,7 +13,7 @@ namespace VoMP.Core.Behavior
         {
             var player = state.Player;
             var space = player.Game.GetActionSpace<TakeContractSpace>();
-            var takeContracts = new TakeContracts(player, space);
+            var takeContracts = new TakeContracts(player);
             if (!takeContracts.IsValid()) return null;
 
             var availableDice = state.GetDiceAvailableFor(space);
@@ -32,10 +32,14 @@ namespace VoMP.Core.Behavior
                 if (second!=null)
                     takeContracts.Contracts.Add(second);
             }
-            takeContracts.Die = availableDice.GetLowestDie(takeContracts.Contracts.Max(x => x.Value));
-            var cost = player.GetOccupancyCost(space, new[] {takeContracts.Die});
-            if (cost.Coin > 0 && !player.CanPay(cost))
-                return GenerateResourcesBehavior.GenerateResources(state, cost);
+            var die = availableDice.GetLowestDie(takeContracts.Contracts.Max(x => x.Value));
+            takeContracts.Die = die;
+            var cost = takeContracts.GetCost();
+            if (!player.CanPay(cost))
+            {
+                var p = new ReserveResourcesChoiceParam(()=>GenerateResourcesBehavior.GenerateResources(state, cost, "Take Contracts"), "Take Contracts") { Dice = new[] {die}};
+                return state.MakeChoiceWithReservedResources(p);
+            }
             return takeContracts;
         }
 

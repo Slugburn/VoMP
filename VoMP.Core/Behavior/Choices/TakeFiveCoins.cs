@@ -7,6 +7,7 @@ namespace VoMP.Core.Behavior.Choices
     {
         private readonly Player _player;
         public TakeFiveCoinsSpace Space { get; }
+
         public Die Die { get; set; }
 
         public TakeFiveCoins(Player player)
@@ -17,6 +18,8 @@ namespace VoMP.Core.Behavior.Choices
 
         public void Execute()
         {
+            if (Die==null)
+                throw new InvalidOperationException("Die has not been set.");
             _player.PlayDice(new[] { Die }, Space);
             _player.GainReward(GetReward(), Space.Description);
             _player.HasTakenActionThisTurn = true;
