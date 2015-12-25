@@ -27,6 +27,8 @@ namespace VoMP.Core.Behavior.Choices
 
         public Cost GetCost()
         {
+            if (Die == null)
+                throw new InvalidOperationException("Die has not been set.");
             return _player.GetOccupancyCost(Space, new[] {Die});
         }
 

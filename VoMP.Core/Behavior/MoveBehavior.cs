@@ -47,7 +47,7 @@ namespace VoMP.Core.Behavior
             travel.Dice = dice;
 
             var cost = travel.GetCost().Add(nextMove.GetCost());
-            if (state.PlayerCanPay(cost)) return travel;
+            if (player.CanPay(cost)) return travel;
 
             // Need to be able to generate resources in order to travel
             var p = new ReserveResourcesChoiceParam(()=> GenerateResourcesBehavior.GenerateResources(state, cost, "travel"), "travel") {Dice = dice};
@@ -107,7 +107,15 @@ namespace VoMP.Core.Behavior
             }
             var buyBlackDie = new BuyBlackDie(state.Player);
             if (buyBlackDie.IsValid())
-                return state.PlayerCanPay(buyBlackDie.Cost) ? buyBlackDie : GenerateResourcesBehavior.GenerateResources(state, buyBlackDie.Cost, "buy black die");
+                if (state.PlayerCanPay(buyBlackDie.Cost))
+                    return buyBlackDie;
+                else
+                {
+                    var p =
+                        new ReserveResourcesChoiceParam(() => GenerateResourcesBehavior.GenerateResources(state, buyBlackDie.Cost, "buy black die"),
+                            "improve dice") {Dice = availableDice.Where(d => d.Value >= targetValue)};
+                    return state.MakeChoiceWithReservedResources(p);
+                }
             return null;
         }
     }
