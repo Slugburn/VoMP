@@ -7,7 +7,7 @@ namespace VoMP.Core.Behavior.Choices
 {
     public class Travel : ISpaceActionChoice
     {
-        private readonly Dictionary<int, int> _travelCost = new Dictionary<int, int>()
+        private static readonly Dictionary<int, int> TravelCost = new Dictionary<int, int>()
         {
             {1, 3},
             {2, 7},
@@ -44,10 +44,10 @@ namespace VoMP.Core.Behavior.Choices
             _player.Game.StartPlayer = _player;
         }
 
-        public Cost GetTravelCost(List<Route> path)
+        public static Cost GetTravelCost(List<Route> path)
         {
             var moveRequired = path.Count;
-            return new Cost {Coin = _travelCost[moveRequired]};
+            return new Cost {Coin = TravelCost[moveRequired]};
         }
 
         public bool IsValid()

@@ -113,16 +113,18 @@ namespace VoMP.Core
             {
                 case ResourceType.Camel:
                     return Camel + OtherCityBonus > 0;
-                    case ResourceType.Coin:
+                case ResourceType.Coin:
                     return Coin + OtherCityBonus > 0;
-                    case ResourceType.Gold:
+                case ResourceType.Gold:
                     return Gold + Good + UniqueGood + OtherCityBonus > 0;
-                    case ResourceType.Silk:
+                case ResourceType.Silk:
                     return Silk + Good + UniqueGood + OtherCityBonus > 0;
                 case ResourceType.Pepper:
                     return Pepper + Good + UniqueGood + OtherCityBonus > 0;
                 case ResourceType.Vp:
                     return Vp + OtherCityBonus > 0;
+                case ResourceType.Move:
+                    return Move > 0;
                 default:
                     return false;
             }

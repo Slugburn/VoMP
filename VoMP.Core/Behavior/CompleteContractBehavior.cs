@@ -20,8 +20,7 @@ namespace VoMP.Core.Behavior
 
             string reason = $"complete {targetContract}";
             var cost = targetContract.Cost;
-            var param = new ReserveResourcesChoiceParam(()=> GenerateResourcesBehavior.GenerateResources(state, cost, reason), reason) {Cost = cost};
-            return state.MakeChoiceWithReservedResources(param);
+            return GenerateResourcesBehavior.GenerateResources(state, cost, reason);
         }
     }
 }

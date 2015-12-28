@@ -9,5 +9,6 @@
         Silk,
         Pepper,
         Vp,
+        Move
     }
 }

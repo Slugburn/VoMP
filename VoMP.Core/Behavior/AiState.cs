@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using VoMP.Core.Actions;
 using VoMP.Core.Behavior.Choices;
+using VoMP.Core.CityCards;
 using VoMP.Core.Extensions;
 
 namespace VoMP.Core.Behavior
@@ -49,12 +51,12 @@ namespace VoMP.Core.Behavior
 
         public bool PlayerCanPay(Cost cost)
         {
-            return Player.CanPay(cost.AllowingFor(ReservedResources));
+            return cost != null && Player.CanPay(cost.AllowingFor(ReservedResources));
         }
 
         public Cost GetShortfall(Cost cost)
         {
-            return Player.Resources.GetShortfall(cost.Add(ReservedResources));
+            return Player.Resources.GetShortfall(cost.AllowingFor(ReservedResources));
         }
 
         public IActionChoice MakeChoiceWithReservedResources(ReserveResourcesChoiceParam p)
@@ -75,6 +77,51 @@ namespace VoMP.Core.Behavior
                 ReservedResources.Subtract(p.Cost);
             p.Dice?.ForEach(d => ReservedDice.Remove(d));
             return null;
+        }
+
+        public List<CityAction> GetValidCityActions(ResourceType resourceType)
+        {
+            var player = Player;
+            var cityActions = player.TradingPosts.SelectMany(t => player.Game.GetMapSpace(t).Actions)
+                .Where(space => !space.IsOccupied && space.Card.CanGenerate(player, resourceType))
+                .SelectMany(CreateCityAction)
+                .Where(a => a.IsValid())
+                .ToList();
+            cityActions.Select(c => c.Card).OfType<OptionCityCard>().ForEach(card => card.SelectResouce(player, ResourceType.Camel));
+            return cityActions;
+        }
+
+        private IEnumerable<CityAction> CreateCityAction(LargeCityAction space)
+        {
+            var availableDice = GetDiceAvailableFor(space);
+            if (!availableDice.Any()) yield break;
+            for (var value = 1; value <= availableDice.MaxValue(); value++)
+            {
+                yield return new CityAction(Player, space)
+                {
+                    Value = value,
+                    Die = availableDice.GetLowestDie(value)
+                };
+            }
+        }
+
+        public IActionChoice ChooseBestAction(IEnumerable<ISpaceActionChoice> choices, Func<Reward,Cost,bool> rewardMeetsShortfall)
+        {
+            var possibleActions = choices.Where(a => a != null && a.IsValid()).ToList();
+            if (!possibleActions.Any()) return null;
+            var meetsRequirement = possibleActions.Where(a => a.GetReward() != null && rewardMeetsShortfall(a.GetReward(), Shortfall)).ToList();
+            var canAfford = possibleActions.Where(a => PlayerCanPay(a.GetCost())).ToList();
+            var best = meetsRequirement.Intersect(canAfford)
+                .OrderByDescending(a => a.GetReward().Rating - a.GetCost().Rating)
+                .FirstOrDefault();
+            if (best != null) return best;
+            var bestAffordable = canAfford.OrderByDescending(a => a.GetReward().Rating - a.GetCost().Rating).FirstOrDefault();
+            return bestAffordable;
+        }
+
+        public Cost GetOutstandingCosts()
+        {
+            return NextMove.GetCost().Add(Player.Contracts.Select(c=>c.Cost).Total()).Add();
         }
     }
 }

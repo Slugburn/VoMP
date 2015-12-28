@@ -15,8 +15,8 @@ namespace VoMP.Core.Behavior
         public static IActionChoice GenerateVp(AiState state)
         {
             state.Shortfall = new Cost {Vp = 3};
-            var cityActions = GetValidCityActions(state, ResourceType.Vp);
-            var bestAction = ChooseBestAction(state, cityActions, (r, c) => r.Vp >= c.Vp);
+            var cityActions = state.GetValidCityActions(ResourceType.Vp);
+            var bestAction = state.ChooseBestAction(cityActions, (r, c) => r.Vp >= c.Vp);
             return bestAction;
         }
 
@@ -26,7 +26,7 @@ namespace VoMP.Core.Behavior
             var player = state.Player;
 
             // Track shortfall in state to be used later
-            var shortfall = player.Resources.GetShortfall(cost);
+            var shortfall = state.GetShortfall(cost);
             state.Shortfall = shortfall;
 
             player.Debug($"needs to generate {shortfall} in order to {reason}");
@@ -34,8 +34,8 @@ namespace VoMP.Core.Behavior
             if (shortfall.Gold > 0)
             {
                 var khansFavor = UseKhansFavor(state);
-                var cityActions = GetValidCityActions(state, ResourceType.Gold);
-                var bestAction = ChooseBestAction(state, cityActions.Concat(new[] {khansFavor}), (r, c) => r.Gold >= c.Gold);
+                var cityActions = state.GetValidCityActions(ResourceType.Gold);
+                var bestAction = state.ChooseBestAction(cityActions.Concat(new[] {khansFavor}), (r, c) => r.Gold >= c.Gold);
                 if (bestAction != null) return bestAction;
             }
             if (shortfall.Silk > 0)
@@ -54,15 +54,15 @@ namespace VoMP.Core.Behavior
                 var khansFavor = UseKhansFavor(state);
                 var camelBazaar = VisitCamelBazaar(state);
 
-                var cityActions = GetValidCityActions(state, ResourceType.Camel);
-                var bestAction = ChooseBestAction(state, cityActions.Concat(new[] {khansFavor, camelBazaar}), (r, c) => r.Camel >= c.Camel);
+                var cityActions = state.GetValidCityActions(ResourceType.Camel);
+                var bestAction = state.ChooseBestAction(cityActions.Concat(new[] {khansFavor, camelBazaar}), (r, c) => r.Camel >= c.Camel);
                 if (bestAction != null) return bestAction;
             }
             if (shortfall.Coin > 0)
             {
-                var cityActions = GetValidCityActions(state, ResourceType.Coin);
+                var cityActions = state.GetValidCityActions(ResourceType.Coin);
                 var takeFiveCoins = TakeFiveCoins(state);
-                var bestAction = ChooseBestAction(state, cityActions.Concat(new ISpaceActionChoice[] {takeFiveCoins}), (r, c) => r.Coin >= c.Coin);
+                var bestAction = state.ChooseBestAction(cityActions.Concat(new ISpaceActionChoice[] {takeFiveCoins}), (r, c) => r.Coin >= c.Coin);
                 if (bestAction != null) return bestAction;
 
                 // Prevent from using money bag after action has been taken to prevent it from being used
@@ -72,8 +72,8 @@ namespace VoMP.Core.Behavior
             }
             if (shortfall.Vp > 0)
             {
-                var cityActions = GetValidCityActions(state, ResourceType.Vp);
-                var bestAction = ChooseBestAction(state, cityActions, (r, c) => r.Vp >= c.Vp);
+                var cityActions = state.GetValidCityActions(ResourceType.Vp);
+                var bestAction = state.ChooseBestAction(cityActions, (r, c) => r.Vp >= c.Vp);
                 if (bestAction != null) return bestAction;
             }
             return null;
@@ -81,28 +81,15 @@ namespace VoMP.Core.Behavior
 
         private static TakeFiveCoins TakeFiveCoins(AiState state)
         {
-            var player = state.Player;
-            var takeFiveCoins = new TakeFiveCoins(player);
+            var takeFiveCoins = new TakeFiveCoins(state.Player);
             if (!takeFiveCoins.IsValid()) return null;
-            takeFiveCoins.Die = state.GetDiceAvailableFor(takeFiveCoins.Space).GetLowestDie();
+            var lowestDie = state.GetDiceAvailableFor(takeFiveCoins.Space).GetLowestDie();
+            if (lowestDie == null) return null;
+            takeFiveCoins.Die = lowestDie;
             var takeFiveCoinsCost = takeFiveCoins.GetCost();
             if (takeFiveCoinsCost.Coin > 2 || !state.PlayerCanPay(takeFiveCoinsCost))
                 takeFiveCoins = null;
             return takeFiveCoins;
-        }
-
-        private static IActionChoice ChooseBestAction(AiState state, IEnumerable<ISpaceActionChoice> choices, Func<Reward,Cost,bool> rewardMeetsShortfall)
-        {
-            var possibleActions = choices.Where(a => a != null && a.IsValid()).ToList();
-            if (!possibleActions.Any()) return null;
-            var meetsRequirement = possibleActions.Where(a => a.GetReward() != null && rewardMeetsShortfall(a.GetReward(), state.Shortfall)).ToList();
-            var canAfford = possibleActions.Where(a => state.PlayerCanPay(a.GetCost())).ToList();
-            var best = meetsRequirement.Intersect(canAfford)
-                .OrderByDescending(a => a.GetReward().Rating - a.GetCost().Rating)
-                .FirstOrDefault();
-            if (best != null) return best;
-            var bestAffordable = canAfford.OrderByDescending(a => a.GetReward().Rating - a.GetCost().Rating).FirstOrDefault();
-            return bestAffordable;
         }
 
         public static CamelBazaar VisitCamelBazaar(AiState state)
@@ -123,8 +110,8 @@ namespace VoMP.Core.Behavior
         {
             var khansFavor = UseKhansFavor(state, ResourceType.Pepper);
             var pepperBazaar = VisitPepperBazaar(state);
-            var cityActions = GetValidCityActions(state, ResourceType.Pepper);
-            var bestAction = ChooseBestAction(state, cityActions.Concat(new[] {khansFavor, pepperBazaar}), (r, c) => r.Pepper >= c.Pepper);
+            var cityActions = state.GetValidCityActions(ResourceType.Pepper);
+            var bestAction = state.ChooseBestAction(cityActions.Concat(new[] {khansFavor, pepperBazaar}), (r, c) => r.Pepper >= c.Pepper);
             return bestAction;
         }
 
@@ -144,8 +131,8 @@ namespace VoMP.Core.Behavior
         {
             var khansFavor = UseKhansFavor(state, ResourceType.Silk);
             var silkBazaar = VisitSilkBazaar(state);
-            var cityActions = GetValidCityActions(state, ResourceType.Silk);
-            var bestAction = ChooseBestAction(state, cityActions.Concat(new[] { khansFavor, silkBazaar }), (r, c) => r.Silk >= c.Silk);
+            var cityActions = state.GetValidCityActions(ResourceType.Silk);
+            var bestAction = state.ChooseBestAction(cityActions.Concat(new[] { khansFavor, silkBazaar }), (r, c) => r.Silk >= c.Silk);
             return bestAction;
         }
 
@@ -160,32 +147,6 @@ namespace VoMP.Core.Behavior
                 if (silkBazaar.Value >= 4 && state.PlayerCanPay(occCost)) return silkBazaar;
             }
             return null;
-        }
-
-        private static List<CityAction> GetValidCityActions(AiState state, ResourceType resourceType)
-        {
-            var player = state.Player;
-            var cityActions = player.TradingPosts.SelectMany(t => player.Game.GetMapSpace(t).Actions)
-                .Where(space => !space.IsOccupied && space.Card.CanGenerate(player, resourceType))
-                .SelectMany(space => CreateCityAction(state, space))
-                .Where(a => a.IsValid())
-                .ToList();
-            cityActions.Select(c => c.Card).OfType<OptionCityCard>().ForEach(card => card.SelectResouce(player, ResourceType.Camel));
-            return cityActions;
-        }
-
-        private static IEnumerable<CityAction> CreateCityAction(AiState state, LargeCityAction space)
-        {
-            var availableDice = state.GetDiceAvailableFor(space);
-            if (!availableDice.Any()) yield break;
-            for (var value = 1; value <= availableDice.MaxValue(); value++)
-            {
-                yield return new CityAction(state.Player, space)
-                {
-                    Value = value,
-                    Die = availableDice.GetLowestDie(value)
-                };
-            }
         }
 
         public static ISpaceActionChoice UseKhansFavor(AiState state, ResourceType resourceType = ResourceType.Gold)

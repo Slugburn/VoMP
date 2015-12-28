@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using VoMP.Core.Behavior.Choices;
+using VoMP.Core.Behavior.Choices.Bazaar;
 using VoMP.Core.Extensions;
 
 namespace VoMP.Core.Behavior
@@ -32,12 +33,22 @@ namespace VoMP.Core.Behavior
             // Try to get more contracts
             if (player.Contracts.Count == 0)
             {
-                var takeContracts = TakeContractsBehavior.TakeContracts(State, c => true);
+                var p1 = new ReserveResourcesChoiceParam(()=> TakeContractsBehavior.TakeContracts(State, c => true), "move and complete contracts") {Cost = State.GetOutstandingCosts()};
+                var takeContracts = State.MakeChoiceWithReservedResources(p1);
                 if (takeContracts != null) return takeContracts;
             }
 
             // Low hanging fruit
-            var khansFavor = GenerateResourcesBehavior.UseKhansFavor(State);
+            var p2 = new ReserveResourcesChoiceParam(()=>PickLowHangingFruit(State), "move and complete contracts") {Cost= State.GetOutstandingCosts()};
+            return State.MakeChoiceWithReservedResources(p2);
+        }
+
+        private static IActionChoice PickLowHangingFruit(AiState state)
+        {
+            var blackDie = ImproveDiceBehavior.BuyBlackDie(state);
+            if (blackDie != null) return blackDie;
+
+            var khansFavor = GenerateResourcesBehavior.UseKhansFavor(state);
             if (khansFavor != null) return khansFavor;
 
 //            if (player.Contracts.Count < 2)
@@ -46,11 +57,11 @@ namespace VoMP.Core.Behavior
 //                if (takeContracts2 != null) return takeContracts2;
 //            }
 
-            var pepperBazaar = GenerateResourcesBehavior.VisitPepperBazaar(State);
-            if (pepperBazaar != null) return pepperBazaar;
+            var pepperBazaar = GenerateResourcesBehavior.VisitPepperBazaar(state);
+            if (pepperBazaar != null && pepperBazaar.GetCost().Coin == 0) return pepperBazaar;
 
-            var camelBazaar = GenerateResourcesBehavior.VisitCamelBazaar(State);
-            if (camelBazaar != null) return camelBazaar;
+            var camelBazaar = GenerateResourcesBehavior.VisitCamelBazaar(state);
+            if (camelBazaar != null && camelBazaar.GetCost().Coin == 0) return camelBazaar;
 
             return null;
         }
@@ -88,7 +99,7 @@ namespace VoMP.Core.Behavior
                 throw new ArgumentException("Expected value of 2", nameof(count));
             if (player.Contracts.Count == 0) return new Reward { Gold = 1, Silk = 1 };
 
-            var neededToComplete = player.Contracts.Aggregate(new Cost(), (cost, contract) => cost.Add(contract.Cost));
+            var neededToComplete = player.Contracts.Select(c=>c.Cost).Total();
             var shortfall = player.Resources.GetShortfall(neededToComplete);
             if (shortfall.Silk == 0  && shortfall.Pepper > 0) return new Reward {Gold = 1, Pepper = 1};
             if (shortfall.Gold == 0 && shortfall.Pepper > 0) return new Reward {Silk = 1, Pepper = 1};

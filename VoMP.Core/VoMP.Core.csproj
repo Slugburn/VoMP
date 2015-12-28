@@ -79,6 +79,7 @@
     <Compile Include="Behavior\CompleteContractBehavior.cs" />
     <Compile Include="Behavior\GenerateResourcesBehavior.cs" />
     <Compile Include="Behavior\IBehavior.cs" />
+    <Compile Include="Behavior\ImproveDiceBehavior.cs" />
     <Compile Include="Behavior\MoveBehavior.cs" />
     <Compile Include="Behavior\ReserveResourcesChoiceParam.cs" />
     <Compile Include="Behavior\TakeContractsBehavior.cs" />
@@ -97,6 +98,7 @@
     <Compile Include="Cost.cs" />
     <Compile Include="Die.cs" />
     <Compile Include="Extensions\ActionExtension.cs" />
+    <Compile Include="Extensions\CostExtension.cs" />
     <Compile Include="Extensions\EnumerableExtension.cs" />
     <Compile Include="Extensions\DieExtension.cs" />
     <Compile Include="Game.cs" />
