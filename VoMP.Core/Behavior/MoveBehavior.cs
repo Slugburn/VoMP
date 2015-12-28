@@ -49,12 +49,17 @@ namespace VoMP.Core.Behavior
 
             travel.Dice = dice;
 
-            var cost = travel.GetCost().Add(nextMove.GetCost());
-            if (player.CanPay(cost)) return travel;
+            var moveCost = nextMove.GetCost();
+            var totalCost = travel.GetCost().Add(moveCost);
+            if (player.CanPay(totalCost)) return travel;
 
             // Need to be able to generate resources in order to travel
-            var p = new ReserveResourcesChoiceParam(()=> GenerateResourcesBehavior.GenerateResources(state, travel.GetCost(), "travel"), "travel") {Dice = dice};
-            return state.MakeChoiceWithReservedResources(p);
+            state.UnreserveResources(moveCost);
+            var p = new ReserveResourcesChoiceParam(()=> GenerateResourcesBehavior.GenerateResources(state, totalCost, "travel"), "travel") {Dice = dice};
+            var generateResources = state.MakeChoiceWithReservedResources(p);
+            if (generateResources == null)
+                state.ReserveResources(moveCost);
+            return generateResources;
         }
 
         private static IActionChoice MoveOne(AiState state)

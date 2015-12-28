@@ -28,6 +28,8 @@ namespace VoMP.Core.Behavior
             // Track shortfall in state to be used later
             var shortfall = state.GetShortfall(cost);
             state.Shortfall = shortfall;
+            if (shortfall.Rating == 0)
+                throw new InvalidOperationException("No resources need to be generated.");
 
             player.Debug($"needs to generate {shortfall} in order to {reason}");
 

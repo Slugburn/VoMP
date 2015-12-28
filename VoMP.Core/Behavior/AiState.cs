@@ -64,7 +64,7 @@ namespace VoMP.Core.Behavior
             if (p.Cost != null && p.Cost.Rating > 0)
             {
                 Player.Debug($"reserves {p.Cost} needed to {p.Reason}");
-                ReservedResources = ReservedResources.Add(p.Cost);
+                ReserveResources(p.Cost);
             }
             if (p.Dice != null)
             {
@@ -74,9 +74,19 @@ namespace VoMP.Core.Behavior
             var choice = p.MakeChoice();
             if (choice != null) return choice;
             if (p.Cost != null)
-                ReservedResources.Subtract(p.Cost);
+                UnreserveResources(p.Cost);
             p.Dice?.ForEach(d => ReservedDice.Remove(d));
             return null;
+        }
+
+        public void ReserveResources(Cost cost)
+        {
+            ReservedResources = ReservedResources.Add(cost);
+        }
+
+        public void UnreserveResources(Cost cost)
+        {
+            ReservedResources.Subtract(cost);
         }
 
         public List<CityAction> GetValidCityActions(ResourceType resourceType)
@@ -121,7 +131,7 @@ namespace VoMP.Core.Behavior
 
         public Cost GetOutstandingCosts()
         {
-            return NextMove.GetCost().Add(Player.Contracts.Select(c=>c.Cost).Total()).Add();
+            return NextMove.GetCost().Add(Player.Contracts.Select(c=>c.Cost).Total()).Add(Travel.GetTravelCost(NextMove));
         }
     }
 }
