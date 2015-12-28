@@ -15,9 +15,8 @@ namespace VoMP.Core.Behavior.Choices
             _space = space;
         }
 
-        public ICityCard Card => _space.Card;
+        public ICityCard Card { get; set; }
 
-        public int OptimumValue => _space.Card.OptimumValue(_player);
         public Die Die { get; set; }
         public int Value { get; set; }
 
@@ -39,24 +38,14 @@ namespace VoMP.Core.Behavior.Choices
             return !_player.HasTakenActionThisTurn &&  _space.DiceCount == 0;
         }
 
-        public bool CanGenerate(ResourceType resourceType)
-        {
-            return _space.Card.CanGenerate(_player, resourceType);
-        }
-
-        public Reward GetOptimumReward()
-        {
-            return _space.Card.GetReward(_player, OptimumValue);
-        }
-
         public Cost GetCost()
         {
-            return _space.Card.GetCost(Die.Value);
+            return Card.GetCost(Die.Value);
         }
 
         public Reward GetReward()
         {
-            return _space.Card.GetReward(_player, Value);
+            return Card.GetReward(_player, Value);
         }
     }
 }

@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using VoMP.Core.Actions;
 using VoMP.Core.Behavior;
-using VoMP.Core.Behavior.Choices;
 using VoMP.Core.Behavior.Choices.Bonus;
 using VoMP.Core.Extensions;
 
@@ -12,8 +10,8 @@ namespace VoMP.Core
 {
     public class Player
     {
-        private readonly int _startingPosition;
         private readonly IBehavior _behavior;
+        private readonly int _startingPosition;
         private Location _pawnLocation;
 
         private Player(Game game, Color color, int startingPosition)
@@ -25,23 +23,19 @@ namespace VoMP.Core
         }
 
         public List<Die> AvailableDice { get; private set; }
-
         public Game Game { get; }
-
         public Color Color { get; set; }
         public int Vp { get; set; }
-
         public ResourceBag Resources { get; private set; }
         public List<Contract> CompletedContracts { get; } = new List<Contract>();
         public ISet<Location> TradingPosts { get; } = new HashSet<Location>();
         public bool HasAvailableDice => AvailableDice.Count > 0;
         public List<Goal> Goals { get; set; }
-
         public List<Contract> Contracts { get; } = new List<Contract>();
         public bool HasBoughtBlackDieThisTurn { get; set; }
-        public RouteMap RouteMap { get; private set; } = RouteMap.Standard();
-
+        public RouteMap RouteMap { get; } = RouteMap.Standard();
         public bool HasTakenActionThisTurn { get; set; }
+        public List<LargeCityAction> CityActions { get; } = new List<LargeCityAction>();
 
         public static Player Create(Game game, Color color, int startingOrder)
         {
@@ -218,20 +212,26 @@ namespace VoMP.Core
             var end = path.Last().End;
             PayCost(cost, $"move {path.Count} from {start} to {end}");
             MovePawn(start, end);
-            if (end.IsTradeLocation())
+            if (end.IsTradeLocation() && !TradingPosts.Contains(end))
             {
-                TradingPosts.Add(end);
-                if (TradingPosts.Count == 8)
-                    GainReward(new Reward { Vp = 5 }, "building 8th trading post");
-                if (TradingPosts.Count == 9)
-                    GainReward(new Reward { Vp = 10 }, "building 9th trading post");
-                var endSpace = Game.GetMapSpace(end);
-                endSpace.TradingPosts.Add(Color);
-                if (endSpace.OutpostBonus != null)
-                    endSpace.ClaimOutpostBonus(this);
-                if (endSpace.CityBonus != null)
-                    endSpace.GrantCityBonusTo(this);
+                BuildTradingPost(end);
             }
+        }
+
+        private void BuildTradingPost(Location end)
+        {
+            TradingPosts.Add(end);
+            if (TradingPosts.Count == 8)
+                GainReward(new Reward {Vp = 5}, "building 8th trading post");
+            if (TradingPosts.Count == 9)
+                GainReward(new Reward {Vp = 10}, "building 9th trading post");
+            var endSpace = Game.GetMapSpace(end);
+            endSpace.TradingPosts.Add(Color);
+            if (endSpace.OutpostBonus != null)
+                endSpace.ClaimOutpostBonus(this);
+            if (endSpace.CityBonus != null)
+                endSpace.GrantCityBonusTo(this);
+            CityActions.AddRange(endSpace.Actions);
         }
 
         public void Output(string s)
@@ -244,7 +244,6 @@ namespace VoMP.Core
             if (!HasTakenActionThisTurn)
                 Game.Debug($"{Color,-6}: [DEBUG] {s}");
         }
-
 
         public List<Route> GetBestPath()
         {
@@ -295,7 +294,7 @@ namespace VoMP.Core
 
         public Cost GetOccupancyCost(ActionSpace space, IEnumerable<Die> dice)
         {
-            return space.IsOccupied ?  new Cost {Coin =  dice.MinValue()} : Cost.None;
+            return space.IsOccupied ? new Cost {Coin = dice.MinValue()} : Cost.None;
         }
 
         public bool HasTradingPostBonusFor(ResourceType resourceType)
@@ -308,36 +307,35 @@ namespace VoMP.Core
             var coins = Resources.Coin;
             if (coins >= 10)
             {
-                var vpForCoins = coins / 10;
-                GainReward(new Reward {Vp = vpForCoins}, $"having {coins} coins" );
+                var vpForCoins = coins/10;
+                GainReward(new Reward {Vp = vpForCoins}, $"having {coins} coins");
             }
             Goals.ForEach(g =>
             {
                 if (HasTradingPost(g.Location1) && HasTradingPost(g.Location2))
-                    GainReward(new Reward {Vp=g.Vp}, $"reaching {g.Location1} and {g.Location2}");
+                    GainReward(new Reward {Vp = g.Vp}, $"reaching {g.Location1} and {g.Location2}");
             });
             var targets = Goals.SelectMany(g => new[] {g.Location1, g.Location2}).Distinct();
             var targetsReached = targets.Intersect(TradingPosts).ToList();
-            var goalScore = new int[] {0, 1, 3, 6, 10}[targetsReached.Count];
-            GainReward(new Reward {Vp=goalScore}, $"reaching {targetsReached.ToDelimitedString()}" );
+            var goalScore = new[] {0, 1, 3, 6, 10}[targetsReached.Count];
+            GainReward(new Reward {Vp = goalScore}, $"reaching {targetsReached.ToDelimitedString()}");
             if (TradingPosts.Contains(Location.Beijing))
             {
                 var index = Game.GetMapSpace(Location.Beijing).TradingPosts.IndexOf(Color);
-                var beijingScore = new[] {10,7,4,1}[index];
+                var beijingScore = new[] {10, 7, 4, 1}[index];
                 var position = new[] {"first", "second", "third", "fourth"}[index];
-                GainReward(new Reward {Vp=beijingScore},$"reaching Beijing {position}");
+                GainReward(new Reward {Vp = beijingScore}, $"reaching Beijing {position}");
                 var goodCount = Resources.Gold + Resources.Silk + Resources.Pepper;
                 if (goodCount > 1)
                 {
                     var vpForGoods = goodCount/2;
-                    GainReward(new Reward {Vp=vpForGoods}, $"having {goodCount} goods");
+                    GainReward(new Reward {Vp = vpForGoods}, $"having {goodCount} goods");
                 }
             }
 
             var completedContractCount = CompletedContracts.Count;
-            if (completedContractCount == Game.GetPlayers().Max(p=>p.CompletedContracts.Count))
-                GainReward(new Reward {Vp=7}, $"completing the most contracts ({completedContractCount})");
+            if (completedContractCount == Game.GetPlayers().Max(p => p.CompletedContracts.Count))
+                GainReward(new Reward {Vp = 7}, $"completing the most contracts ({completedContractCount})");
         }
-
     }
 }

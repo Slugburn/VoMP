@@ -51,7 +51,9 @@ namespace VoMP.Core.Behavior
 
         public bool PlayerCanPay(Cost cost)
         {
-            return cost != null && Player.CanPay(cost.AllowingFor(ReservedResources));
+            if (cost == null) return false;
+            var adjustedCost = cost.AllowingFor(ReservedResources);
+            return Player.CanPay(adjustedCost);
         }
 
         public Cost GetShortfall(Cost cost)
@@ -86,32 +88,35 @@ namespace VoMP.Core.Behavior
 
         public void UnreserveResources(Cost cost)
         {
-            ReservedResources.Subtract(cost);
+            ReservedResources =  ReservedResources.Subtract(cost);
         }
 
         public List<CityAction> GetValidCityActions(ResourceType resourceType)
         {
             var player = Player;
-            var cityActions = player.TradingPosts.SelectMany(t => player.Game.GetMapSpace(t).Actions)
+            var cityActions = player.CityActions
                 .Where(space => !space.IsOccupied && space.Card.CanGenerate(player, resourceType))
-                .SelectMany(CreateCityAction)
+                .SelectMany(action => CreateCityAction(action, resourceType))
                 .Where(a => a.IsValid())
                 .ToList();
-            cityActions.Select(c => c.Card).OfType<OptionCityCard>().ForEach(card => card.SelectResouce(player, ResourceType.Camel));
             return cityActions;
         }
 
-        private IEnumerable<CityAction> CreateCityAction(LargeCityAction space)
+        private IEnumerable<CityAction> CreateCityAction(LargeCityAction space, ResourceType resourceType)
         {
             var availableDice = GetDiceAvailableFor(space);
             if (!availableDice.Any()) yield break;
             for (var value = 1; value <= availableDice.MaxValue(); value++)
             {
-                yield return new CityAction(Player, space)
-                {
-                    Value = value,
-                    Die = availableDice.GetLowestDie(value)
-                };
+                var die = availableDice.GetLowestDie(value);
+                var optionCityCard = space.Card as OptionCityCard;
+                if (optionCityCard == null)
+                    yield return new CityAction(Player, space) {Card = space.Card,  Value = value, Die = die};
+                else
+                    foreach (var card in optionCityCard.GetOptions(Player, resourceType))
+                    {
+                        yield return new CityAction(Player, space) { Card = card, Value = value, Die = die };
+                    }
             }
         }
 
@@ -132,6 +137,11 @@ namespace VoMP.Core.Behavior
         public Cost GetOutstandingCosts()
         {
             return NextMove.GetCost().Add(Player.Contracts.Select(c=>c.Cost).Total()).Add(Travel.GetTravelCost(NextMove));
+        }
+
+        public Cost GetOutstandingShortfall()
+        {
+            return Player.Resources.GetShortfall(GetOutstandingCosts());
         }
     }
 }

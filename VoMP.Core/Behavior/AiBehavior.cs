@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using VoMP.Core.Behavior.Choices;
-using VoMP.Core.Behavior.Choices.Bazaar;
 using VoMP.Core.Extensions;
 
 namespace VoMP.Core.Behavior
@@ -74,7 +73,17 @@ namespace VoMP.Core.Behavior
 
         public CityBonus ChooseOtherCityBonus(Player player)
         {
-            return CityBonus.CreateAll().Single(x => x.Reward.Camel == 3);
+            var cityBonuses = CityBonus.CreateAll();
+            var shortfall = State.GetOutstandingShortfall();
+            if (shortfall.Gold > 0 || shortfall.Silk > 0)
+                return cityBonuses.Single(x => x.Reward.UniqueGood > 0);
+            if (shortfall.Coin > 3)
+                return cityBonuses.Single(x => x.Reward.Coin == 5);
+            if (shortfall.Camel > 1)
+                return cityBonuses.Single(x => x.Reward.Camel == 3);
+            if (shortfall.Camel > 0)
+                return cityBonuses.Single(x => x.Reward.Camel == 1 && x.Reward.Coin == 3);
+            return cityBonuses.Single(x => x.Reward.Vp == 3);
         }
 
         public Reward ChooseCamelOrCoin(Player player, int count)
@@ -86,7 +95,7 @@ namespace VoMP.Core.Behavior
 
         public Reward ChooseGoodsToGain(Player player, int count)
         {
-            var shortfall = State?.Shortfall;
+            var shortfall = State.GetOutstandingShortfall();
             if (shortfall == null || shortfall.Gold > 0) return new Reward {Gold = count};
             if (shortfall.Silk > 0) return new Reward {Silk = count};
             if (shortfall.Pepper > 0) return new Reward {Pepper = count};

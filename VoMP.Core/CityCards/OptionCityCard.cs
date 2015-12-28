@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using VoMP.Core.Extensions;
 
@@ -6,8 +7,7 @@ namespace VoMP.Core.CityCards
 {
     internal class OptionCityCard : ICityCard
     {
-        private ExchangeCityCard _selectedOption;
-        private List<ExchangeCityCard> _options;
+        private readonly List<ExchangeCityCard> _options;
 
         public static OptionCityCard CreateReversible(Cost cost, Reward reward)
         {
@@ -21,12 +21,6 @@ namespace VoMP.Core.CityCards
         public OptionCityCard(IEnumerable<ExchangeCityCard> options)
         {
             _options = options.ToList();
-            _selectedOption = null;
-        }
-
-        public void SelectResouce(Player player, ResourceType resourceType)
-        {
-            _selectedOption = _options.SingleOrDefault(o => o.CanGenerate(player, resourceType));
         }
 
         public int OptimumValue(Player player)
@@ -36,12 +30,12 @@ namespace VoMP.Core.CityCards
 
         public Cost GetCost(int dieValue)
         {
-            return _selectedOption?.Cost.Multiply(dieValue);
+            throw new NotImplementedException();
         }
 
         public Reward GetReward(Player player, int dieValue)
         {
-            return _selectedOption?.Reward.Multiply(dieValue);
+            throw new NotImplementedException();
         }
 
         public bool CanGenerate(Player player, ResourceType resourceType)
@@ -51,15 +45,17 @@ namespace VoMP.Core.CityCards
 
         private int MaxValue(Player player)
         {
-            for (var value = 6; value > 0; value--)
-                if (player.CanPay(_selectedOption.Cost.Multiply(value)))
-                    return value;
-            return 0;
+            throw new NotImplementedException();
         }
 
         public override string ToString()
         {
             return _options.ToDelimitedString(" or ");
+        }
+
+        public IEnumerable<ExchangeCityCard> GetOptions(Player player, ResourceType resourceType)
+        {
+            return _options.Where(o => o.CanGenerate(player, resourceType));
         }
     }
 }

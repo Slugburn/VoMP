@@ -16,7 +16,7 @@ namespace VoMP.Core.Behavior
             if (completableContract != null)
                 return new CompleteContract(player, completableContract);
             // choose the easiest to complete contract to get resources for
-            var targetContract = contracts.OrderBy(c => player.Resources.GetShortfall(c.Cost).Rating).First();
+            var targetContract = contracts.OrderBy(c => state.GetShortfall(c.Cost).Rating).First();
 
             string reason = $"complete {targetContract}";
             var cost = targetContract.Cost;
