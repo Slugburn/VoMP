@@ -83,6 +83,15 @@
     <Compile Include="Behavior\MoveBehavior.cs" />
     <Compile Include="Behavior\ReserveResourcesChoiceParam.cs" />
     <Compile Include="Behavior\TakeContractsBehavior.cs" />
+    <Compile Include="Characters\Berke.cs" />
+    <Compile Include="Characters\ICharacter.cs" />
+    <Compile Include="Characters\Johannes.cs" />
+    <Compile Include="Characters\Kubilai.cs" />
+    <Compile Include="Characters\Matteo.cs" />
+    <Compile Include="Characters\Mercator.cs" />
+    <Compile Include="Characters\NicoloAndMarco.cs" />
+    <Compile Include="Characters\Raschid.cs" />
+    <Compile Include="Characters\Wilhelm.cs" />
     <Compile Include="CityBonus.cs" />
     <Compile Include="CityCards\CityCard.cs" />
     <Compile Include="CityCards\DieRangeCityCard.cs" />
@@ -122,6 +131,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using VoMP.Core.Actions;
 using VoMP.Core.Behavior.Choices;
 using VoMP.Core.Behavior.Choices.Bazaar;
 using VoMP.Core.Behavior.Choices.Bonus;
-using VoMP.Core.CityCards;
 using VoMP.Core.Extensions;
 
 namespace VoMP.Core.Behavior
@@ -114,13 +111,11 @@ namespace VoMP.Core.Behavior
         {
             var player = state.Player;
             var camelBazaar = new CamelBazaar(player);
-            if (camelBazaar.IsValid())
-            {
-                camelBazaar.Dice = state.AvailableDice.GetHighestDice(1);
-                camelBazaar.Value = state.AvailableDice.GetHighestDie().Value;
-                var occCost = player.GetOccupancyCost(camelBazaar.Space, camelBazaar.Dice);
-                if (camelBazaar.Value >= 4 && state.PlayerCanPay(occCost)) return camelBazaar;
-            }
+            if (!camelBazaar.IsValid()) return null;
+            camelBazaar.Dice = state.AvailableDice.GetHighestDice(1);
+            camelBazaar.Value = state.AvailableDice.GetHighestDie().Value;
+            var occCost = player.GetOccupancyCost(camelBazaar.Space, camelBazaar.Dice);
+            if (camelBazaar.Value >= 4 && state.PlayerCanPay(occCost)) return camelBazaar;
             return null;
         }
 
