@@ -22,7 +22,7 @@ namespace VoMP.Core.Tests
             finally
             {
                 Console.WriteLine(g);
-                Console.WriteLine(g.GetPlayers().Select(p=>$"{p.Color} = {p.Resources.Vp}").ToDelimitedString(", "));
+                Console.WriteLine(g.GetPlayers().Select(p=>$"{p.Color} ({p.Character.Name}) = {p.Resources.Vp}").ToDelimitedString(", "));
             }
         }
     }

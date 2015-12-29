@@ -4,6 +4,6 @@
     {
         string Name { get; }
 
-        void Claim(Player player);
+        void ModifyPlayer(Player player);
     }
 }

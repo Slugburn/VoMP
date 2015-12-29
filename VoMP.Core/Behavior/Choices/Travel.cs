@@ -19,7 +19,8 @@ namespace VoMP.Core.Behavior.Choices
 
         private readonly Player _player;
         public ActionSpace Space { get; }
-        public List<Die> Dice { get; set; }
+        public IList<Die> Dice { get; set; }
+        public int Value => Path.Count;
         public List<Route> Path { get; set; }
 
         public Travel(Player player)
@@ -59,7 +60,7 @@ namespace VoMP.Core.Behavior.Choices
         {
             if (Dice == null || Path == null)
                 throw new InvalidOperationException();
-            return GetTravelCost(Path).Add(_player.GetOccupancyCost(Space, Dice));
+            return GetTravelCost(Path).Add(_player.GetOccupancyCost(Space, Dice, Value));
         }
 
         public Reward GetReward()

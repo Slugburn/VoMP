@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using VoMP.Core.Behavior.Choices;
 using VoMP.Core.Behavior.Choices.Bazaar;
@@ -49,7 +50,7 @@ namespace VoMP.Core.Behavior
             {
 
                 var khansFavor = UseKhansFavor(state);
-                var camelBazaar = VisitCamelBazaar(state);
+                var camelBazaar = VisitBazaar(state, new CamelBazaar(state.Player));
 
                 var cityActions = state.GetValidCityActions(ResourceType.Camel);
                 var bestAction = state.ChooseBestAction(cityActions.Concat(new[] {khansFavor, camelBazaar}), (r, c) => r.Camel >= c.Camel);
@@ -79,7 +80,7 @@ namespace VoMP.Core.Behavior
         private static IActionChoice GenerateGold(AiState state)
         {
             var khansFavor = UseKhansFavor(state);
-            var goldBazaar = VisitGoldBazaar(state);
+            var goldBazaar = VisitBazaar(state, new GoldBazaar(state.Player));
             var cityActions = state.GetValidCityActions(ResourceType.Gold);
             var bestAction = state.ChooseBestAction(cityActions.Concat(new[] {khansFavor, goldBazaar}), (r, c) => r.Gold >= c.Gold);
             return bestAction;
@@ -88,7 +89,7 @@ namespace VoMP.Core.Behavior
         private static IActionChoice GenerateSilk(AiState state)
         {
             var khansFavor = UseKhansFavor(state, ResourceType.Silk);
-            var silkBazaar = VisitSilkBazaar(state);
+            var silkBazaar = VisitBazaar(state, new SilkBazaar(state.Player));
             var cityActions = state.GetValidCityActions(ResourceType.Silk);
             var bestAction = state.ChooseBestAction(cityActions.Concat(new[] { khansFavor, silkBazaar }), (r, c) => r.Silk >= c.Silk);
             return bestAction;
@@ -101,67 +102,32 @@ namespace VoMP.Core.Behavior
             var lowestDie = state.GetDiceAvailableFor(takeFiveCoins.Space).GetLowestDie();
             if (lowestDie == null) return null;
             takeFiveCoins.Die = lowestDie;
-            var takeFiveCoinsCost = takeFiveCoins.GetCost();
+            var takeFiveCoinsCost = lowestDie.HasValue ? takeFiveCoins.GetCost() : new Cost {Coin = 1};
             if (takeFiveCoinsCost.Coin > 2 || !state.PlayerCanPay(takeFiveCoinsCost))
                 takeFiveCoins = null;
             return takeFiveCoins;
         }
 
-        public static CamelBazaar VisitCamelBazaar(AiState state)
-        {
-            var player = state.Player;
-            var camelBazaar = new CamelBazaar(player);
-            if (!camelBazaar.IsValid()) return null;
-            camelBazaar.Dice = state.AvailableDice.GetHighestDice(1);
-            camelBazaar.Value = state.AvailableDice.GetHighestDie().Value;
-            var occCost = player.GetOccupancyCost(camelBazaar.Space, camelBazaar.Dice);
-            if (camelBazaar.Value >= 4 && state.PlayerCanPay(occCost)) return camelBazaar;
-            return null;
-        }
-
         private static IActionChoice GeneratePepper(AiState state)
         {
             var khansFavor = UseKhansFavor(state, ResourceType.Pepper);
-            var pepperBazaar = VisitPepperBazaar(state);
+            var pepperBazaar = VisitBazaar(state, new PepperBazaar(state.Player));
             var cityActions = state.GetValidCityActions(ResourceType.Pepper);
             var bestAction = state.ChooseBestAction(cityActions.Concat(new[] {khansFavor, pepperBazaar}), (r, c) => r.Pepper >= c.Pepper);
             return bestAction;
         }
 
-        public static ISpaceActionChoice VisitPepperBazaar(AiState state)
+        public static ISpaceActionChoice VisitBazaar(AiState state, BazaarBase bazaar)
         {
-            var player = state.Player;
-            var pepperBazaar = new PepperBazaar(player);
-            if (!pepperBazaar.IsValid()) return null;
-            pepperBazaar.Dice = state.AvailableDice.GetHighestDice(1);
-            pepperBazaar.Value = state.AvailableDice.GetHighestDie().Value;
-            var cost = player.GetOccupancyCost(pepperBazaar.Space, pepperBazaar.Dice);
-            if (pepperBazaar.Value < 4) return null;
-            return state.PlayerCanPay(cost) ? pepperBazaar : null; // GenerateMoreResources(state, cost, pepperBazaar.Dice);
-        }
-
-        private static ISpaceActionChoice VisitSilkBazaar(AiState state)
-        {
-            var silkBazaar = new SilkBazaar(state.Player);
-            if (!silkBazaar.IsValid() || state.AvailableDice.Count < 2) return null;
-            silkBazaar.Value = state.AvailableDice.GetHighestDice(2).MinValue();
-            silkBazaar.Dice = state.AvailableDice.GetLowestDice(2, silkBazaar.Value);
-            var occCost = state.Player.GetOccupancyCost(silkBazaar.Space, silkBazaar.Dice);
-            if (silkBazaar.Value >= 4 && state.PlayerCanPay(occCost)) return silkBazaar;
+            var count = bazaar.Space.RequiredDice;
+            if (!bazaar.IsValid() || state.AvailableDice.Count < count) return null;
+            bazaar.Value = state.GetBestDiceValue(count);
+            bazaar.Dice = state.AvailableDice.GetLowestDice(count, bazaar.Value);
+            var occCost = state.GetOccupancyCost(bazaar);
+            if (bazaar.Value >= 4 && state.PlayerCanPay(occCost)) return bazaar;
             return null;
         }
 
-        private static ISpaceActionChoice VisitGoldBazaar(AiState state)
-        {
-            var goldBazaar = new GoldBazaar(state.Player);
-            if (!goldBazaar.IsValid() || state.AvailableDice.Count < 3) return null;
-            goldBazaar.Value = state.AvailableDice.GetHighestDice(3).MinValue();
-            goldBazaar.Dice = state.AvailableDice.GetLowestDice(3, goldBazaar.Value);
-            var occCost = state.Player.GetOccupancyCost(goldBazaar.Space, goldBazaar.Dice);
-            if (goldBazaar.Value >= 4 && state.PlayerCanPay(occCost)) return goldBazaar;
-            return null;
-        }
-        
         public static ISpaceActionChoice UseKhansFavor(AiState state, ResourceType resourceType = ResourceType.Gold)
         {
             var player = state.Player;
@@ -169,7 +135,7 @@ namespace VoMP.Core.Behavior
             if (!khansFavor.IsValid()) return null;
 
             var availableDice = state.GetDiceAvailableFor(khansFavor.Space);
-            var die = availableDice.GetLowestDie(khansFavor.Space.MinimumValue);
+            var die = availableDice.GetLowestDie(khansFavor.MinimumValue);
             if (die == null) return null;
 
             khansFavor.Die = die;

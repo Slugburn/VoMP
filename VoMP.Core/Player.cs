@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using VoMP.Core.Actions;
 using VoMP.Core.Behavior;
+using VoMP.Core.Behavior.Choices;
 using VoMP.Core.Behavior.Choices.Bonus;
+using VoMP.Core.Characters;
 using VoMP.Core.Extensions;
 
 namespace VoMP.Core
@@ -30,12 +32,13 @@ namespace VoMP.Core
         public List<Contract> CompletedContracts { get; } = new List<Contract>();
         public ISet<Location> TradingPosts { get; } = new HashSet<Location>();
         public bool HasAvailableDice => AvailableDice.Count > 0;
-        public List<Goal> Goals { get; set; }
+        public List<Objective> Goals { get; set; }
         public List<Contract> Contracts { get; } = new List<Contract>();
         public bool HasBoughtBlackDieThisTurn { get; set; }
         public RouteMap RouteMap { get; } = RouteMap.Standard();
         public bool HasTakenActionThisTurn { get; set; }
         public List<LargeCityAction> CityActions { get; } = new List<LargeCityAction>();
+        public List<Action<Player>> CharacterBonuses { get; } = new List<Action<Player>>();
 
         public static Player Create(Game game, Color color, int startingOrder)
         {
@@ -58,15 +61,24 @@ namespace VoMP.Core
 
         public void StartRound()
         {
+            // Create dice
+            AvailableDice = Enumerable.Range(0, 5).Select(x => Die.Create(Color)).ToList();
+
             // Award bonuses
+            CharacterBonuses.ForEach(bonus => bonus(this));
             GetTradingPostBonusSpaces().ForEach(ms => ms.GrantCityBonusTo(this));
+
+            if (!RollsDice) return;
+
             // Roll dice and grant compensation
-            AvailableDice = Enumerable.Range(0, 5).Select(x => new Die(Color)).OrderBy(d => d.Value).ToList();
+            AvailableDice.ForEach(d => d.Roll());
             Output($"rolls {AvailableDice.Select(x => x.Value).ToDelimitedString()}");
             var compensation = Math.Max(0, 15 - AvailableDice.Sum(x => x.Value));
             if (compensation <= 0) return;
             GainReward(ChooseCamelOrCoin(compensation), "compensation");
         }
+
+        public bool RollsDice { get; set; } = true;
 
         public IEnumerable<MapLocation> GetTradingPostBonusSpaces()
         {
@@ -111,7 +123,7 @@ namespace VoMP.Core
                 }
             }
             if (reward.Contract > 0)
-                DrawBonusContract();
+                GainBonusContract();
             if (reward.Die > 0)
                 GainBlackDie();
             if (reward.Good > 0)
@@ -138,12 +150,19 @@ namespace VoMP.Core
                 return;
             }
             Game.BlackDice--;
-            var die = new Die(Color.Black);
-            Output($"rolls {die}");
-            AvailableDice.Add(die);
+            GainDie(Color.Black);
         }
 
-        private void DrawBonusContract()
+        public void GainDie(Color color)
+        {
+            var die = Die.Create(color);
+            AvailableDice.Add(die);
+            if (!RollsDice) return;
+            die.Roll();
+            Output($"rolls {die}");
+        }
+
+        public void GainBonusContract()
         {
             if (Contracts.Count >= 2)
                 DiscardContract();
@@ -163,11 +182,18 @@ namespace VoMP.Core
                     if (HasTakenActionThisTurn) break;
                     choice = new MoneyBag(this, Game.MoneyBagSpace, AvailableDice.GetLowestDie());
                 }
+                var spaceActionChoice = choice as ISpaceActionChoice;
+                if (spaceActionChoice != null && !spaceActionChoice.Dice.All(d=>d.HasValue))
+                    throw new UnassignedDieException();
                 choice.Execute();
+                // notify other players of action choice
+                Game.GetPlayers().Except(new[] {this}).ForEach(player=>player.NotifyOfActionChoice(player, choice));
             }
             HasBoughtBlackDieThisTurn = false;
             HasTakenActionThisTurn = false;
         }
+
+        public Action<Player, IActionChoice> NotifyOfActionChoice = (player,choice) => { };
 
         public bool HasTradingPost(Location location)
         {
@@ -262,7 +288,7 @@ namespace VoMP.Core
         public void PlayDice(IList<Die> dice, ActionSpace space)
         {
             Output($"plays {dice.ToDelimitedString("")} on {space}");
-            var cost = space.OccupancyCost(dice);
+            var cost = GetOccupancyCost(space, dice, 0);
             if (cost.Coin > 0)
                 PayCost(cost, $"play on occupied {space} space");
 
@@ -292,10 +318,17 @@ namespace VoMP.Core
             return availableDice.Count >= space.RequiredDice;
         }
 
-        public Cost GetOccupancyCost(ActionSpace space, IEnumerable<Die> dice)
+        public Func<ActionSpace, IEnumerable<Die>, int, Cost> GetOccupancyCost { get; set; } = (space, dice, value) => DefaultGetOccupancyCost(space, dice, value);
+
+        private static Cost DefaultGetOccupancyCost(ActionSpace space, IEnumerable<Die> dice, int value)
         {
-            return space.IsOccupied ? new Cost {Coin = dice.MinValue()} : Cost.None;
+            if (!space.IsOccupied) return Cost.None;
+            var list = dice as IList<Die> ?? dice.ToList();
+            var coin = (list.All(d => d.HasValue) ? list.MinValue() : value);
+            return new Cost {Coin = coin};
         }
+
+        public ICharacter Character { get; private set; }
 
         public bool HasTradingPostBonusFor(ResourceType resourceType)
         {
@@ -336,6 +369,12 @@ namespace VoMP.Core
             var completedContractCount = CompletedContracts.Count;
             if (completedContractCount == Game.GetPlayers().Max(p => p.CompletedContracts.Count))
                 GainReward(new Reward {Vp = 7}, $"completing the most contracts ({completedContractCount})");
+        }
+
+        public void ClaimCharacter(ICharacter character)
+        {
+            Character = character;
+            character.ModifyPlayer(this);
         }
     }
 }

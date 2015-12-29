@@ -1,18 +1,28 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using VoMP.Core.Behavior.Choices;
+using VoMP.Core.Behavior.Choices.Bazaar;
 
 namespace VoMP.Core.Characters
 {
     public class Mercator : ICharacter
     {
         public string Name => "Mercator ex Tabriz";
-        public void Claim(Player player)
+        public void ModifyPlayer(Player player)
         {
             // Free resources when other character visits marketplace
-            throw new NotImplementedException();
+            player.NotifyOfActionChoice = OnOtherPlayerAction;
+        }
+
+        public void OnOtherPlayerAction(Player player, IActionChoice choice)
+        {
+            if (choice is GoldBazaar)
+                player.GainReward(new Reward {Gold = 1}, Name);
+            if (choice is SilkBazaar)
+                player.GainReward(new Reward {Silk = 1}, Name);
+            if (choice is PepperBazaar)
+                player.GainReward(new Reward {Pepper = 1}, Name);
+            if (choice is CamelBazaar)
+                player.GainReward(new Reward {Camel = 1}, Name);
         }
 
     }

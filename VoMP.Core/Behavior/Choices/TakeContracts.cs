@@ -10,17 +10,17 @@ namespace VoMP.Core.Behavior.Choices
         public List<ContractSpace> Contracts { get; } = new List<ContractSpace>();
         public Die Die { get; set; }
         private readonly Player _player;
-        private readonly TakeContractSpace _space;
+        public ActionSpace Space { get; }
 
         public TakeContracts(Player player)
         {
             _player = player;
-            _space = player.Game.GetActionSpace<TakeContractSpace>();
+            Space = player.Game.GetActionSpace<TakeContractSpace>();
         }
 
         public void Execute()
         {
-            _player.PlayDice(new[] { Die }, _space);
+            _player.PlayDice(new[] { Die }, Space);
             foreach (var space in Contracts)
             {
                 _player.Output($"takes contract for {space.Contract} at position {space.Value}");
@@ -36,17 +36,20 @@ namespace VoMP.Core.Behavior.Choices
 
         public bool IsValid()
         {
-            return _player.Game.AvailableContracts.Any() && _player.CanPlayInActionSpace(_space);
+            return _player.Game.AvailableContracts.Any() && _player.CanPlayInActionSpace(Space);
         }
 
         public Cost GetCost()
         {
-            return _player.GetOccupancyCost(_space, new[] {Die});
+            return _player.GetOccupancyCost(Space, Dice, Value);
         }
 
         public Reward GetReward()
         {
             return new Reward {Contract = Contracts.Count };
         }
+
+        public IList<Die> Dice => new[] {Die};
+        public int Value => Contracts.Max(c => c.Value);
     }
 }

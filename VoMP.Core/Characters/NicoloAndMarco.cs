@@ -9,7 +9,7 @@ namespace VoMP.Core.Characters
     public class NicoloAndMarco : ICharacter
     {
         public string Name => "Nicolo and Marco Polo";
-        public void Claim(Player player)
+        public void ModifyPlayer(Player player)
         {
             // Two pawns, bonus camel
             throw new NotImplementedException();

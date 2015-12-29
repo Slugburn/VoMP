@@ -3,7 +3,7 @@
     public class Wilhelm : ICharacter
     {
         public string Name => "Wilhelm von Rubruk";
-        public void Claim(Player player)
+        public void ModifyPlayer(Player player)
         {
             // Two black trading posts, creates trading post while passing through, 10 VP for 11th trading post
             throw new System.NotImplementedException();

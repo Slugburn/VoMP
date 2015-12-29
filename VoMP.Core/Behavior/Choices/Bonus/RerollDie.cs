@@ -14,7 +14,7 @@
         public void Execute()
         {
             _player.PayCost(Cost, $"reroll {Die}");
-            Die.Reroll();
+            Die.Roll();
             _player.Output($"rolls {Die}");
         }
 

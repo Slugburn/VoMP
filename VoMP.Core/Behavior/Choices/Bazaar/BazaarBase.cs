@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using VoMP.Core.Actions;
 
 namespace VoMP.Core.Behavior.Choices.Bazaar
@@ -14,7 +15,7 @@ namespace VoMP.Core.Behavior.Choices.Bazaar
             Space = space;
         }
 
-        public GrandBazaarSpace Space { get; set; }
+        public ActionSpace Space { get; set; }
 
         public int Value { get; set; }
         public IList<Die> Dice { get; set; }
@@ -34,7 +35,7 @@ namespace VoMP.Core.Behavior.Choices.Bazaar
 
         public Cost GetCost()
         {
-            return _player.GetOccupancyCost(Space, Dice);
+            return _player.GetOccupancyCost(Space, Dice, Value);
         }
 
         public abstract Reward GetReward();

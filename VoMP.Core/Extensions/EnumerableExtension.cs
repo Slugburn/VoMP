@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 
 namespace VoMP.Core.Extensions
@@ -45,6 +46,11 @@ namespace VoMP.Core.Extensions
                 list.RemoveAt(randomIndex);
             }
             return shuffled;
+        }
+
+        public static List<Tuple<T1, T2>> PairWith<T1, T2>(this IEnumerable<T1> source1, IEnumerable<T2> source2)
+        {
+            return source1.Zip(source2, (x, y) => new Tuple<T1, T2>(x, y)).ToList();
         }
 
         public static List<Tuple<T1, T2>> PairWithRandom<T1, T2>(this IEnumerable<T1> source1, IEnumerable<T2> source2)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using VoMP.Core.Actions;
 
 namespace VoMP.Core.Behavior.Choices
@@ -6,7 +7,7 @@ namespace VoMP.Core.Behavior.Choices
     public class TakeFiveCoins : ISpaceActionChoice
     {
         private readonly Player _player;
-        public TakeFiveCoinsSpace Space { get; }
+        public ActionSpace Space { get; }
 
         public Die Die { get; set; }
 
@@ -27,15 +28,17 @@ namespace VoMP.Core.Behavior.Choices
 
         public Cost GetCost()
         {
-            if (Die == null)
-                throw new InvalidOperationException("Die has not been set.");
-            return _player.GetOccupancyCost(Space, new[] {Die});
+
+            return _player.GetOccupancyCost(Space, new[] {Die},1);
         }
 
         public Reward GetReward()
         {
             return new Reward { Coin = 5 };
         }
+
+        public IList<Die> Dice => new[] {Die};
+        public int Value => 1;
 
         public bool IsValid()
         {

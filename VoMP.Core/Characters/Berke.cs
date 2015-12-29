@@ -3,10 +3,10 @@
     public class Berke : ICharacter
     {
         public string Name => "Berke Khan";
-        public void Claim(Player player)
+        public void ModifyPlayer(Player player)
         {
             // Use occupied action space without paying coin
-            throw new System.NotImplementedException();
+            player.GetOccupancyCost = (space, dice, value) => Cost.None;
         }
 
     }

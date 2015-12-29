@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using VoMP.Core.Behavior.Choices;
+using VoMP.Core.Behavior.Choices.Bazaar;
 using VoMP.Core.Extensions;
 
 namespace VoMP.Core.Behavior
@@ -15,6 +16,18 @@ namespace VoMP.Core.Behavior
             State = new AiState(player);
 
             // Try to move
+            var choice = MakeChoice(player);
+            var spaceActionChoice = choice as ISpaceActionChoice;
+            if (spaceActionChoice != null && !spaceActionChoice.Dice.All(x=>x.HasValue))
+            {
+                spaceActionChoice.Dice.ForEach(d=>d.Assign(spaceActionChoice.Value));
+            }
+
+            return choice;
+        }
+
+        private IActionChoice MakeChoice(Player player)
+        {
             var move = MoveBehavior.Move(State);
             if (move != null) return move;
 
@@ -32,13 +45,16 @@ namespace VoMP.Core.Behavior
             // Try to get more contracts
             if (player.Contracts.Count == 0)
             {
-                var p1 = new ReserveResourcesChoiceParam(()=> TakeContractsBehavior.TakeContracts(State, c => true), "move and complete contracts") {Cost = State.GetOutstandingCosts()};
+                var p1 = new ReserveResourcesChoiceParam(() => TakeContractsBehavior.TakeContracts(State, c => true), "move and complete contracts")
+                {
+                    Cost = State.GetOutstandingCosts()
+                };
                 var takeContracts = State.MakeChoiceWithReservedResources(p1);
                 if (takeContracts != null) return takeContracts;
             }
 
             // Low hanging fruit
-            var p2 = new ReserveResourcesChoiceParam(()=>PickLowHangingFruit(State), "move and complete contracts") {Cost= State.GetOutstandingCosts()};
+            var p2 = new ReserveResourcesChoiceParam(() => PickLowHangingFruit(State), "move and complete contracts") {Cost = State.GetOutstandingCosts()};
             return State.MakeChoiceWithReservedResources(p2);
         }
 
@@ -56,10 +72,10 @@ namespace VoMP.Core.Behavior
 //                if (takeContracts2 != null) return takeContracts2;
 //            }
 
-            var pepperBazaar = GenerateResourcesBehavior.VisitPepperBazaar(state);
+            var pepperBazaar = GenerateResourcesBehavior.VisitBazaar(state, new PepperBazaar(state.Player));
             if (pepperBazaar != null && pepperBazaar.GetCost().Coin == 0) return pepperBazaar;
 
-            var camelBazaar = GenerateResourcesBehavior.VisitCamelBazaar(state);
+            var camelBazaar = GenerateResourcesBehavior.VisitBazaar(state, new CamelBazaar(state.Player));
             if (camelBazaar != null && camelBazaar.GetCost().Coin == 0) return camelBazaar;
 
             return null;

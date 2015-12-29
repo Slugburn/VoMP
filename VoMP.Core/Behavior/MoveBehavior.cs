@@ -50,7 +50,9 @@ namespace VoMP.Core.Behavior
             travel.Dice = dice;
 
             var moveCost = nextMove.GetCost();
-            var totalCost = travel.GetCost().Add(moveCost);
+            var travelCost = Travel.GetTravelCost(nextMove);
+            var occupancyCost = state.GetOccupancyCost(travel);
+            var totalCost = travelCost.Add(occupancyCost).Add(moveCost);
             if (player.CanPay(totalCost)) return travel;
 
             // Need to be able to generate resources in order to travel
@@ -87,7 +89,7 @@ namespace VoMP.Core.Behavior
             var dice = player.AvailableDice.GetLowestDice(3, 5);
             goldBazaar.Dice = dice;
             if (dice.Count < 2) return null;
-            var cost = moveCost.Add(player.GetOccupancyCost(goldBazaar.Space, dice));
+            var cost = moveCost.Add(state.GetOccupancyCost(goldBazaar));
             if (dice.Count == 2)
             {
                 if (!player.CanPay(cost)) return null;

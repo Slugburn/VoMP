@@ -143,5 +143,18 @@ namespace VoMP.Core.Behavior
         {
             return Player.Resources.GetShortfall(GetOutstandingCosts());
         }
+
+        public Cost GetOccupancyCost(ISpaceActionChoice choice)
+        {
+            return Player.GetOccupancyCost(choice.Space, choice.Dice, choice.Value);
+        }
+
+        public int GetBestDiceValue(int count)
+        {
+            var dice = AvailableDice;
+            if (dice.Any(d => !d.HasValue))
+                return 6;
+            return dice.GetHighestDice(count).MinValue();
+        }
     }
 }

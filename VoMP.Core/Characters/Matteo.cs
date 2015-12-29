@@ -1,18 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace VoMP.Core.Characters
+﻿namespace VoMP.Core.Characters
 {
     public class Matteo : ICharacter
     {
         public string Name => "Matteo Polo";
-        public void Claim(Player player)
+
+        public void ModifyPlayer(Player player)
         {
             // Bonus white die and contract
-            throw new NotImplementedException();
+            player.CharacterBonuses.Add(BonusWhiteDie);
+            player.CharacterBonuses.Add(BonusContract);
+        }
+
+        private static void BonusWhiteDie(Player player)
+        {
+            player.Output("gains bonus white die");
+            player.GainDie(Color.White);
+        }
+
+        private static void BonusContract(Player player)
+        {
+            player.Output("gains bonus contract");
+            player.GainBonusContract();
         }
 
     }

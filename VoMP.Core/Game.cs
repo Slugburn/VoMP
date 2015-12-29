@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using VoMP.Core.Actions;
+using VoMP.Core.Characters;
 using VoMP.Core.CityCards;
 using VoMP.Core.Extensions;
 
@@ -58,8 +59,11 @@ namespace VoMP.Core
             // Give each player a starting contract
             _players.PairWithRandom(Contract.CreateStartingContracts()).ForEach(x => x.Item1.GainContract(x.Item2));
 
-            // Give each player two goals
-            var goalGroups = Goal.CreateAll().Shuffle().Segment(2);
+            // Choose characters
+            _players.PairWith(Character.CreateBasic()).ForEach(x=>x.Item1.ClaimCharacter(x.Item2));
+
+            // Give each player two objectives
+            var goalGroups = Objective.CreateAll().Shuffle().Segment(2);
             _players.PairWithRandom(goalGroups).ForEach(x => x.Item1.Goals = x.Item2.ToList());
         }
 

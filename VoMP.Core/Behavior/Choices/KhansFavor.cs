@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using VoMP.Core.Actions;
 using static VoMP.Core.ResourceType;
@@ -15,9 +16,10 @@ namespace VoMP.Core.Behavior.Choices
             Space = player.Game.GetActionSpace<KhansFavorSpace>();
         }
 
-        public KhansFavorSpace Space { get; }
         public ResourceType ResourceType { get; set; }
         public Die Die { get; set; }
+        public int MinimumValue => ((KhansFavorSpace) Space).MinimumValue;
+        public ActionSpace Space { get; }
 
         public void Execute()
         {
@@ -45,11 +47,14 @@ namespace VoMP.Core.Behavior.Choices
             };
         }
 
+        public IList<Die> Dice => new[] {Die};
+        public int Value => MinimumValue;
+
         public bool IsValid()
         {
             return _player.CanPlayInActionSpace(Space)
                    && Space.DiceCount < 4
-                   && _player.AvailableDice.Any(d => d.Value >= Space.MinimumValue);
+                   && _player.AvailableDice.Any(d => !d.HasValue || d.Value >= MinimumValue);
         }
     }
 }

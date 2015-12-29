@@ -84,6 +84,7 @@
     <Compile Include="Behavior\ReserveResourcesChoiceParam.cs" />
     <Compile Include="Behavior\TakeContractsBehavior.cs" />
     <Compile Include="Characters\Berke.cs" />
+    <Compile Include="Characters\Character.cs" />
     <Compile Include="Characters\ICharacter.cs" />
     <Compile Include="Characters\Johannes.cs" />
     <Compile Include="Characters\Kubilai.cs" />
@@ -111,7 +112,7 @@
     <Compile Include="Extensions\EnumerableExtension.cs" />
     <Compile Include="Extensions\DieExtension.cs" />
     <Compile Include="Game.cs" />
-    <Compile Include="Goal.cs" />
+    <Compile Include="Objective.cs" />
     <Compile Include="ResourceType.cs" />
     <Compile Include="IOutput.cs" />
     <Compile Include="Location.cs" />
@@ -127,6 +128,7 @@
     <Compile Include="RouteMap.cs" />
     <Compile Include="Actions\IAction.cs" />
     <Compile Include="Actions\LargeCityAction.cs" />
+    <Compile Include="UnassignedDieException.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
