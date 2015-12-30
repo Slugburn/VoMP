@@ -17,10 +17,9 @@
             player.GainDie(Color.White);
         }
 
-        private static void BonusContract(Player player)
+        private void BonusContract(Player player)
         {
-            player.Output("gains bonus contract");
-            player.GainBonusContract();
+            player.GainReward(new Reward {Contract = 1}, Name);
         }
 
     }

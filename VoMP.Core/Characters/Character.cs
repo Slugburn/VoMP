@@ -4,7 +4,7 @@ namespace VoMP.Core.Characters
 {
     public static class Character
     {
-        public static IList<ICharacter> CreateBasic() => new ICharacter[] {new Raschid(), new Matteo(), new Berke(), new Mercator()};
+        public static IList<ICharacter> CreateBasic() => new ICharacter[] {new Raschid(), new Matteo(), new Berke(), new Johannes(),  new Mercator()};
 
         public static IEnumerable<ICharacter> CreateAll() =>
             new ICharacter[]

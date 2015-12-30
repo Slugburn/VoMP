@@ -7,8 +7,10 @@ namespace VoMP.Core.Characters
         public string Name => "Johannes Caprini";
         public void ModifyPlayer(Player player)
         {
-            // All oasises are adjacent to each other, bonus 3 coins
-            throw new NotImplementedException();
+            // All oasises are adjacent to each other
+            player.RouteMap = RouteMap.Oasis();
+            // Bonus 3 coins
+            player.CharacterBonuses.Add(p=>p.GainReward(new Reward {Coin = 3}, Name ));
         }
 
     }

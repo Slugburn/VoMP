@@ -35,7 +35,7 @@ namespace VoMP.Core
         public List<Objective> Goals { get; set; }
         public List<Contract> Contracts { get; } = new List<Contract>();
         public bool HasBoughtBlackDieThisTurn { get; set; }
-        public RouteMap RouteMap { get; } = RouteMap.Standard();
+        public RouteMap RouteMap { get; set; } = RouteMap.Standard();
         public bool HasTakenActionThisTurn { get; set; }
         public List<LargeCityAction> CityActions { get; } = new List<LargeCityAction>();
         public List<Action<Player>> CharacterBonuses { get; } = new List<Action<Player>>();

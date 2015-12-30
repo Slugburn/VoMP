@@ -74,11 +74,10 @@ namespace VoMP.Core.Behavior
                 ReservedDice.AddRange(p.Dice);
             }
             var choice = p.MakeChoice();
-            if (choice != null) return choice;
             if (p.Cost != null)
                 UnreserveResources(p.Cost);
             p.Dice?.ForEach(d => ReservedDice.Remove(d));
-            return null;
+            return choice;
         }
 
         public void ReserveResources(Cost cost)

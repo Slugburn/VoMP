@@ -6,12 +6,64 @@ namespace VoMP.Core
 {
     public class ResourceBag
     {
-        public int Camel { get; set; }
-        public int Coin { get; set; }
-        public int Gold { get; set; }
-        public int Silk { get; set; }
-        public int Pepper { get; set; }
+        private int _camel;
+        private int _coin;
+        private int _gold;
+        private int _silk;
+        private int _pepper;
+
+        public int Camel
+        {
+            get { return _camel; }
+            set
+            {
+                if (value < 0 ) throw new ArgumentException(nameof(Camel));
+                _camel = value;
+            }
+        }
+
+        public int Coin
+        {
+            get { return _coin; }
+            set
+            {
+                if (value < 0) throw new ArgumentException(nameof(Coin));
+                _coin = value;
+            }
+        }
+
+        public int Gold
+        {
+            get { return _gold; }
+            set
+            {
+                if (value < 0) throw new ArgumentException(nameof(Gold));
+                _gold = value;
+            }
+        }
+
+        public int Silk
+        {
+            get { return _silk; }
+            set
+            {
+                if (value < 0) throw new ArgumentException(nameof(Silk));
+                _silk = value;
+            }
+        }
+
+        public int Pepper
+        {
+            get { return _pepper; }
+            set
+            {
+                if (value < 0) throw new ArgumentException(nameof(Pepper));
+                _pepper = value;
+            }
+        }
+
         public int Vp { get; set; }
+
         public bool CanPay(Cost cost)
         {
             if (cost.Camel > Camel) return false;
@@ -20,7 +72,6 @@ namespace VoMP.Core
             if (cost.Silk > Silk) return false;
             if (cost.Pepper > Pepper) return false;
             if (cost.Good + cost.Gold + cost.Silk + cost.Pepper > Gold + Silk + Pepper) return false;
-            if (cost.Vp > Vp) return false;
             return true;
         }
 
