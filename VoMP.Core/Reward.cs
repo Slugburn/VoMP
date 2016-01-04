@@ -3,24 +3,109 @@ using System.Linq;
 
 namespace VoMP.Core
 {
-    public class Reward
+    public class Reward : Reward.IRewardBuilder
     {
-        public int Camel { get; set; }
-        public int Coin { get; set; }
-        public int Gold { get; set; }
-        public int Silk { get; set; }
-        public int Pepper { get; set; }
-        public int Good { get; set; }
-        public int UniqueGood { get; set; }
+        private Reward()
+        {
+        }
 
-        public int Move { get; set; }
-        public int Contract { get; set; }
-        public int Die { get; set; }
-        public int Vp { get; set; }
-        public int OtherCityBonus { get; set; }
-        public int TradingPostBonus { get; set; }
+        public int Camel { get; private set; }
+        public int Coin { get; private set; }
+        public int Gold { get; private set; }
+        public int Silk { get; private set; }
+        public int Pepper { get; private set; }
+        public int Good { get; private set; }
+        public int UniqueGood { get; private set; }
 
-        public int Rating => Camel + Coin + Move*3 + Gold*3 + Silk*2 + Pepper + Good*3 + UniqueGood*2 + Vp + Die*3 + Move*6 + OtherCityBonus*3;
+        public int Move { get; private set; }
+        public int Contract { get; private set; }
+        public int Die { get; private set; }
+        public int Vp { get; private set; }
+        public int OtherCityBonus { get; private set; }
+        public int TradingPostBonus { get; private set; }
+
+        public int Rating => Camel + Coin + Move*3 + Gold*3 + Silk*2 + Pepper + Good*3 + UniqueGood*2 + Vp + Die*3 + Move*4 + OtherCityBonus*3;
+        public static IRewardBuilder Of => new Reward();
+        public IRewardBuilder And => Add(new Reward());
+        public static Reward None { get; } = new Reward();
+
+        Reward IRewardBuilder.Camel(int count)
+        {
+            Camel = count;
+            return this;
+        }
+
+        Reward IRewardBuilder.Coin(int count)
+        {
+            Coin = count;
+            return this;
+        }
+
+        Reward IRewardBuilder.Gold(int count)
+        {
+            Gold = count;
+            return this;
+        }
+
+        Reward IRewardBuilder.Silk(int count)
+        {
+            Silk = count;
+            return this;
+        }
+
+        Reward IRewardBuilder.Pepper(int count)
+        {
+            Pepper = count;
+            return this;
+        }
+
+        Reward IRewardBuilder.Vp(int count)
+        {
+            Vp = count;
+            return this;
+        }
+
+        Reward IRewardBuilder.TradingPostBonus(int count)
+        {
+            TradingPostBonus = count;
+            return this;
+        }
+
+        Reward IRewardBuilder.OtherCityBonus(int count)
+        {
+            OtherCityBonus = count;
+            return this;
+        }
+
+        Reward IRewardBuilder.Good(int count)
+        {
+            Good = count;
+            return this;
+        }
+
+        Reward IRewardBuilder.UniqueGood(int count)
+        {
+            UniqueGood = count;
+            return this;
+        }
+
+        Reward IRewardBuilder.Move(int count)
+        {
+            Move = count;
+            return this;
+        }
+
+        Reward IRewardBuilder.Contract(int count)
+        {
+            Contract = count;
+            return this;
+        }
+
+        Reward IRewardBuilder.Die(int count)
+        {
+            Die = count;
+            return this;
+        }
 
         public ResourceBag GetResources()
         {
@@ -37,16 +122,15 @@ namespace VoMP.Core
 
         public Cost ToCost()
         {
-            return new Cost
-            {
-                Camel = Camel,
-                Coin = Coin,
-                Gold = Gold,
-                Good = Good + UniqueGood,
-                Pepper = Pepper,
-                Silk = Silk,
-                Vp = Vp
-            };
+            return Cost.Of
+                .Camel(Camel)
+                .And.Coin(Coin)
+                .And.Gold(Gold)
+                .And.Silk(Silk)
+                .And.Pepper(Pepper)
+                .And.Vp(Vp)
+                .And.Good(Good + UniqueGood)
+                .And.Move(Move);
         }
 
         public override string ToString()
@@ -102,8 +186,28 @@ namespace VoMP.Core
                 Pepper = Pepper*factor,
                 Silk = Silk*factor,
                 Vp = Vp*factor,
-                OtherCityBonus = OtherCityBonus * factor,
-                TradingPostBonus = TradingPostBonus * factor
+                OtherCityBonus = OtherCityBonus*factor,
+                TradingPostBonus = TradingPostBonus*factor
+            };
+        }
+
+        public Reward Add(Reward reward)
+        {
+            return new Reward
+            {
+                Camel = Camel + reward.Camel,
+                Coin = Coin + reward.Coin,
+                Contract = Contract + reward.Contract,
+                Die = Die + reward.Die,
+                Gold = Gold + reward.Gold,
+                Good = Good + reward.Good,
+                UniqueGood = UniqueGood + reward.UniqueGood,
+                Move = Move + reward.Move,
+                Pepper = Pepper + reward.Pepper,
+                Silk = Silk + reward.Silk,
+                Vp = Vp + reward.Vp,
+                OtherCityBonus = OtherCityBonus + reward.OtherCityBonus,
+                TradingPostBonus = TradingPostBonus + reward.TradingPostBonus
             };
         }
 
@@ -128,6 +232,39 @@ namespace VoMP.Core
                 default:
                     return false;
             }
+        }
+
+        public Reward GetConcreteRewards()
+        {
+            return new Reward
+            {
+                Camel = Camel,
+                Coin = Coin,
+                Contract = Contract,
+                Die = Die,
+                Gold = Gold,
+                Move = Move,
+                Pepper = Pepper,
+                Silk = Silk,
+                Vp = Vp
+            };
+        }
+
+        public interface IRewardBuilder
+        {
+            Reward Camel(int count);
+            Reward Coin(int count);
+            Reward Gold(int count);
+            Reward Silk(int count);
+            Reward Pepper(int count);
+            Reward Vp(int count);
+            Reward TradingPostBonus(int count);
+            Reward OtherCityBonus(int count);
+            Reward Good(int count);
+            Reward UniqueGood(int count);
+            Reward Move(int count);
+            Reward Contract(int count);
+            Reward Die(int count);
         }
     }
 }

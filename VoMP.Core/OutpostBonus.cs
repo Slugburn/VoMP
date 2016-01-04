@@ -13,16 +13,16 @@
         {
             return new[]
             {
-                new OutpostBonus(new Reward {Good = 1}),
-                new OutpostBonus(new Reward {Camel = 3}),
-                new OutpostBonus(new Reward {Contract = 1}),
-                new OutpostBonus(new Reward {Die = 1}),
-                new OutpostBonus(new Reward {Silk = 2}),
-                new OutpostBonus(new Reward {Move = 1}),
-                new OutpostBonus(new Reward {Coin = 5}),
-                new OutpostBonus(new Reward {Coin = 3}),
-                new OutpostBonus(new Reward {Gold = 2}),
-                new OutpostBonus(new Reward {Camel = 2})
+                new OutpostBonus(Core.Reward.Of.Good(1)),
+                new OutpostBonus(Core.Reward.Of.Camel(3)),
+                new OutpostBonus(Core.Reward.Of.Camel(2)),
+                new OutpostBonus(Core.Reward.Of.Contract(1)),
+                new OutpostBonus(Core.Reward.Of.Die(1)),
+                new OutpostBonus(Core.Reward.Of.Silk(2)),
+                new OutpostBonus(Core.Reward.Of.Move(1)),
+                new OutpostBonus(Core.Reward.Of.Coin(5)),
+                new OutpostBonus(Core.Reward.Of.Coin(3)),
+                new OutpostBonus(Core.Reward.Of.Gold(2)),
             };
         }
 

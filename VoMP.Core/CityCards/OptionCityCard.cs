@@ -57,5 +57,9 @@ namespace VoMP.Core.CityCards
         {
             return _options.Where(o => o.CanGenerate(player, resourceType));
         }
+        public IEnumerable<ExchangeCityCard> GetOptions(Player player)
+        {
+            return _options;
+        }
     }
 }

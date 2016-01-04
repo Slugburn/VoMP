@@ -42,7 +42,11 @@ namespace VoMP.Core
 
             // Create list of action spaces
             Actions = _mapLocations.Values.SelectMany(l => l.Actions)
-                .Concat(new IAction[] {new TakeFiveCoinsSpace(), new KhansFavorSpace(), new GoldBazaarSpace(), new SilkBazaarSpace(), new PepperBazaarSpace(), new CamelBazaarSpace(), new TakeContractSpace(), new TravelSpace()})
+                .Concat(new IAction[]
+                {
+                    new MoneyBagSpace(), new TakeFiveCoinsSpace(), new KhansFavorSpace(), new GoldBazaarSpace(), new SilkBazaarSpace(), new PepperBazaarSpace(), new CamelBazaarSpace(),
+                    new TakeContractSpace(), new TravelSpace()
+                })
                 .ToList();
 
             // Shuffle contracts
@@ -110,7 +114,6 @@ namespace VoMP.Core
             AvailableContracts = _contracts.Draw(6);
             // clear played dice
             Actions.OfType<ActionSpace>().ForEach(x => x.ClearDice());
-            MoneyBagSpace.Dice.Clear();
         }
 
         private Player GetNextPlayer(Player player)
@@ -166,5 +169,9 @@ namespace VoMP.Core
 
         public MoneyBagSpace MoneyBagSpace { get;  } = new MoneyBagSpace();
 
+        public IEnumerable<MapLocation> GetMapLocations()
+        {
+            return _mapLocations.Values;
+        }
     }
 }

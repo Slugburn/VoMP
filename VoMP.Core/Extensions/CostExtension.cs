@@ -7,7 +7,7 @@ namespace VoMP.Core.Extensions
     {
         public static Cost Total(this IEnumerable<Cost> costs)
         {
-            return costs.Aggregate(new Cost(), (total, cost) => total.Add(cost));
+            return costs.Aggregate(Cost.None, (total, cost) => total.Add(cost));
         }
     }
 }

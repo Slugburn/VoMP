@@ -9,7 +9,9 @@
             _player = player;
         }
 
-        public Cost Cost { get; } = new Cost {Camel = 3};
+        public Cost Cost { get; } = Cost.Of.Camel(3);
+
+        public Reward Reward { get; } = Reward.Of.Die(1);
 
         public void Execute()
         {

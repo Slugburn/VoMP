@@ -8,9 +8,9 @@ namespace VoMP.Core.Behavior.Choices.Bazaar
         {
         }
 
-        public override Reward GetReward()
+        protected override Reward RewardFor(int value)
         {
-            return new Reward {Camel = Value};
+            return Reward.Of.Camel(Value);
         }
     }
 }

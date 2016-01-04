@@ -1,8 +1,6 @@
 ﻿using System.Linq;
-using VoMP.Core.Actions;
 using VoMP.Core.Behavior.Choices;
 using VoMP.Core.Behavior.Choices.Bazaar;
-using VoMP.Core.Behavior.Choices.Bonus;
 using VoMP.Core.Extensions;
 
 namespace VoMP.Core.Behavior
@@ -13,13 +11,9 @@ namespace VoMP.Core.Behavior
         {
             var nextMove = state.NextMove;
             if (nextMove == null) return null;
-            var moveNeeded = nextMove.Count;
 
             // Reserve resources needed to complete next move
-            var moveCost = nextMove.GetCost();
-            var reason = $"move {moveNeeded} spaces from {nextMove.First().Start} to {nextMove.Last().End}";
-            var reserveResourcesChoice = new ReserveResourcesChoiceParam(() => DoMove(state), reason) {Cost = moveCost};
-            return state.MakeChoiceWithReservedResources(reserveResourcesChoice);
+            return DoMove(state);
         }
 
         private static IActionChoice DoMove(AiState state)
@@ -35,7 +29,7 @@ namespace VoMP.Core.Behavior
             var moveNeeded = nextMove.Count;
 
             var cityActions = state.GetValidCityActions(ResourceType.Move);
-            var bestAction = state.ChooseBestAction(cityActions, (r, c) => r.Move >= moveNeeded);
+            var bestAction = state.ChooseBestAction(cityActions, Cost.Of.Move(moveNeeded));
             if (bestAction!= null)
                 return bestAction;
 
@@ -52,16 +46,16 @@ namespace VoMP.Core.Behavior
             var moveCost = nextMove.GetCost();
             var travelCost = Travel.GetTravelCost(nextMove);
             var occupancyCost = state.GetOccupancyCost(travel);
+
             var totalCost = travelCost.Add(occupancyCost).Add(moveCost);
             if (player.CanPay(totalCost)) return travel;
 
             // Need to be able to generate resources in order to travel
-            state.UnreserveResources(moveCost);
-            var p = new ReserveResourcesChoiceParam(()=> GenerateResourcesBehavior.GenerateResources(state, totalCost, "travel"), "travel") {Dice = dice};
-            var generateResources = state.MakeChoiceWithReservedResources(p);
-            if (generateResources == null)
-                state.ReserveResources(moveCost);
-            return generateResources;
+            using (state.ReserveDice(dice, "travel"))
+            {
+                var generateResources = GenerateResourcesBehavior.GenerateResources(state, totalCost, "travel");
+                return generateResources;
+            }
         }
 
         private static IActionChoice MoveOne(AiState state)
@@ -90,13 +84,11 @@ namespace VoMP.Core.Behavior
             goldBazaar.Dice = dice;
             if (dice.Count < 2) return null;
             var cost = moveCost.Add(state.GetOccupancyCost(goldBazaar));
-            if (dice.Count == 2)
-            {
-                if (!player.CanPay(cost)) return null;
-                var p = new ReserveResourcesChoiceParam(() => ImproveDiceBehavior.ImproveDice(state, goldBazaar.Space, 5),"visit the Gold Bazaar") {Dice = dice};
-                return state.MakeChoiceWithReservedResources(p);
-            }
-            return player.CanPay(cost) ? goldBazaar : GenerateResourcesBehavior.GenerateResources(state, cost, "visit the gold bazaar");
+            if (dice.Count == 3)
+                return player.CanPay(cost) ? goldBazaar : GenerateResourcesBehavior.GenerateResources(state, cost, "visit the gold bazaar");
+            if (!player.CanPay(cost)) return null;
+            using (state.ReserveDice(dice, "visit the Gold Bazaar"))
+                return ImproveDiceBehavior.ImproveDice(state, goldBazaar.Space, 5);
         }
     }
 }

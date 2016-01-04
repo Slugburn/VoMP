@@ -13,7 +13,7 @@ namespace VoMP.Core
         {
             var list = routes as IList<Route> ?? routes.ToList();
             // Add reverse direction
-            var reverseDirection = list.Select(r => new Route(r.End, r.Start) {Camel = r.Camel, Coin = r.Coin}).ToList();
+            var reverseDirection = list.Select(r => new Route(r.End, r.Start, r.Cost)).ToList();
             _map = list.Union(reverseDirection).ToLookup(r => r.Start);
         }
 
@@ -36,33 +36,33 @@ namespace VoMP.Core
             {
                 new Route(Venezia, OasisA),
                 new Route(OasisA, Moscow),
-                new Route(Moscow, Anxi) {Camel = 3},
-                new Route(Anxi, Karakorum) {Camel = 2},
+                new Route(Moscow, Anxi, Cost.Of.Camel(3)),
+                new Route(Anxi, Karakorum, Cost.Of.Camel(2)),
                 new Route(Karakorum, OasisB),
-                new Route(OasisB, OasisC) {Coin = 5},
+                new Route(OasisB, OasisC, Cost.Of.Coin(5)),
                 new Route(OasisC, Beijing),
                 new Route(OasisB, OasisD),
-                new Route(OasisD, Beijing) {Camel = 3},
-                new Route(Venezia, OasisE) {Camel = 3},
+                new Route(OasisD, Beijing, Cost.Of.Camel(3)),
+                new Route(Venezia, OasisE, Cost.Of.Camel(3)),
                 new Route(OasisE, Samarcanda),
-                new Route(Samarcanda, OasisF) {Camel = 2},
-                new Route(OasisF, Kashgar) {Camel = 4},
-                new Route(Kashgar, LanZhou) {Camel = 2},
+                new Route(Samarcanda, OasisF, Cost.Of.Camel(2)),
+                new Route(OasisF, Kashgar, Cost.Of.Camel(4)),
+                new Route(Kashgar, LanZhou, Cost.Of.Camel(2)),
                 new Route(LanZhou, OasisD),
                 new Route(OasisE, OasisG),
                 new Route(Venezia, Alexandria),
-                new Route(Alexandria, OasisG) {Coin = 7},
-                new Route(OasisG, Ormuz) {Camel = 3},
-                new Route(Ormuz, Karachi) {Camel = 3},
+                new Route(Alexandria, OasisG, Cost.Of.Coin(7)),
+                new Route(OasisG, Ormuz, Cost.Of.Camel(3)),
+                new Route(Ormuz, Karachi, Cost.Of.Camel(3)),
                 new Route(Karachi, OasisH),
                 new Route(OasisH, Xian),
                 new Route(Xian, Beijing),
                 new Route(Alexandria, OasisI),
-                new Route(OasisI, Adana) {Camel = 2},
-                new Route(Adana, Kochi) {Coin = 15},
-                new Route(Kochi, OasisH) {Camel = 4},
-                new Route(Kochi, Sumatra) {Coin = 10},
-                new Route(Sumatra, OasisJ) {Camel = 4},
+                new Route(OasisI, Adana, Cost.Of.Camel(2)),
+                new Route(Adana, Kochi, Cost.Of.Coin(15)),
+                new Route(Kochi, OasisH, Cost.Of.Camel(4)),
+                new Route(Kochi, Sumatra, Cost.Of.Coin(10)),
+                new Route(Sumatra, OasisJ, Cost.Of.Camel(4)),
                 new Route(OasisJ, Beijing)
             };
             return routes;
@@ -95,7 +95,7 @@ namespace VoMP.Core
                 foreach (var route in _map[u])
                 {
                     var v = route.End;
-                    var alt = dist[u] + (3 + route.Coin + route.Camel*2);
+                    var alt = dist[u] + (3 + route.Cost.Coin + route.Cost.Camel *2);
                     if (alt < dist[v])
                     {
                         dist[v] = alt;

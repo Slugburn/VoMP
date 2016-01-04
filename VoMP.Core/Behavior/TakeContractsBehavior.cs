@@ -12,6 +12,8 @@ namespace VoMP.Core.Behavior
         public static IActionChoice TakeContracts(AiState state, Func<Contract, bool> condition)
         {
             var player = state.Player;
+            if (player.Contracts.Count == 2) return null;
+
             var space = player.Game.GetActionSpace<TakeContractSpace>();
             var takeContracts = new TakeContracts(player);
             if (!takeContracts.IsValid()) return null;
@@ -34,13 +36,11 @@ namespace VoMP.Core.Behavior
             }
             var die = availableDice.GetLowestDie(takeContracts.Contracts.Max(x => x.Value));
             takeContracts.Die = die;
-            var cost = takeContracts.GetCost();
-            if (!player.CanPay(cost))
-            {
-                var p = new ReserveResourcesChoiceParam(()=>GenerateResourcesBehavior.GenerateResources(state, cost, "Take Contracts"), "Take Contracts") { Dice = new[] {die}};
-                return state.MakeChoiceWithReservedResources(p);
-            }
-            return takeContracts;
+            var cost = takeContracts.Cost;
+            if (player.CanPay(cost)) return takeContracts;
+            // Generate resources needed to take contract
+            using (state.ReserveDice(new[] {die}, "Take Contracts"))
+                return GenerateResourcesBehavior.GenerateResources(state, cost, "Take Contracts");
         }
 
         private static ContractSpace GetEasiestContract(Player player, ResourceBag resources, ActionSpace space, IEnumerable<ContractSpace> contracts, IEnumerable<Die> availableDice)

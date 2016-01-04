@@ -9,7 +9,7 @@ namespace VoMP.Core.Behavior
 {
     public class AiBehavior : IBehavior
     {
-        public AiState State { get; private set; }
+        public AiState State { get; set; }
 
         public IActionChoice ChooseAction(Player player)
         {
@@ -42,20 +42,20 @@ namespace VoMP.Core.Behavior
             if (cityAction != null)
                 return cityAction;
 
-            // Try to get more contracts
-            if (player.Contracts.Count == 0)
+            using (State.ReserveResources(State.GetOutstandingCosts(), "move and complete contracts"))
             {
-                var p1 = new ReserveResourcesChoiceParam(() => TakeContractsBehavior.TakeContracts(State, c => true), "move and complete contracts")
+                // Try to get more contracts
+                if (player.Contracts.Count == 0)
                 {
-                    Cost = State.GetOutstandingCosts()
-                };
-                var takeContracts = State.MakeChoiceWithReservedResources(p1);
-                if (takeContracts != null) return takeContracts;
+                    var takeContracts = TakeContractsBehavior.TakeContracts(State, c => true);
+                    if (takeContracts != null) return takeContracts;
+                }
+
+                // Low hanging fruit
+                var lowHanging = PickLowHangingFruit(State);
+                return lowHanging ?? GenerateResourcesBehavior.UseMoneyBag(State);
             }
 
-            // Low hanging fruit
-            var p2 = new ReserveResourcesChoiceParam(() => PickLowHangingFruit(State), "move and complete contracts") {Cost = State.GetOutstandingCosts()};
-            return State.MakeChoiceWithReservedResources(p2);
         }
 
         private static IActionChoice PickLowHangingFruit(AiState state)
@@ -73,10 +73,10 @@ namespace VoMP.Core.Behavior
 //            }
 
             var pepperBazaar = GenerateResourcesBehavior.VisitBazaar(state, new PepperBazaar(state.Player));
-            if (pepperBazaar != null && pepperBazaar.GetCost().Coin == 0) return pepperBazaar;
+            if (pepperBazaar != null && pepperBazaar.Cost.Coin == 0) return pepperBazaar;
 
             var camelBazaar = GenerateResourcesBehavior.VisitBazaar(state, new CamelBazaar(state.Player));
-            if (camelBazaar != null && camelBazaar.GetCost().Coin == 0) return camelBazaar;
+            if (camelBazaar != null && camelBazaar.Cost.Coin == 0) return camelBazaar;
 
             return null;
         }
@@ -104,31 +104,31 @@ namespace VoMP.Core.Behavior
 
         public Reward ChooseCamelOrCoin(Player player, int count)
         {
-            var shortfall = State?.Shortfall;
-            if (shortfall == null || shortfall.Camel > 0 || shortfall.Coin == 0) return new Reward {Camel = count};
-            return new Reward {Coin = count};
+            var shortfall = State?.GetOutstandingShortfall();
+            if (shortfall == null || shortfall.Camel > 0 || shortfall.Coin == 0) return Reward.Of.Camel(count);
+            return Reward.Of.Coin(count);
         }
 
         public Reward ChooseGoodsToGain(Player player, int count)
         {
             var shortfall = State.GetOutstandingShortfall();
-            if (shortfall == null || shortfall.Gold > 0) return new Reward {Gold = count};
-            if (shortfall.Silk > 0) return new Reward {Silk = count};
-            if (shortfall.Pepper > 0) return new Reward {Pepper = count};
-            return new Reward {Gold = count};
+            if (shortfall == null || shortfall.Gold > 0) return Reward.Of.Gold(count);
+            if (shortfall.Silk > 0) return Reward.Of.Silk(count);
+            if (shortfall.Pepper > 0) return Reward.Of.Pepper(count);
+            return Reward.Of.Gold(count);
         }
 
         public Reward ChooseUniqueGoodsToGain(Player player, int count)
         {
             if (count != 2)
                 throw new ArgumentException("Expected value of 2", nameof(count));
-            if (player.Contracts.Count == 0) return new Reward { Gold = 1, Silk = 1 };
+            if (player.Contracts.Count == 0) return Reward.Of.Gold(1).And.Silk(1);
 
             var neededToComplete = player.Contracts.Select(c=>c.Cost).Total();
             var shortfall = player.Resources.GetShortfall(neededToComplete);
-            if (shortfall.Silk == 0  && shortfall.Pepper > 0) return new Reward {Gold = 1, Pepper = 1};
-            if (shortfall.Gold == 0 && shortfall.Pepper > 0) return new Reward {Silk = 1, Pepper = 1};
-            return new Reward { Gold = 1, Silk = 1 };
+            if (shortfall.Silk == 0  && shortfall.Pepper > 0) return Reward.Of.Gold(1).And.Pepper(1);
+            if (shortfall.Gold == 0 && shortfall.Pepper > 0) return Reward.Of.Silk(1).And.Pepper(1);
+            return Reward.Of.Gold(1).And.Silk(1);
         }
 
         public Contract ChooseContractToDiscard(Player player)
@@ -145,8 +145,6 @@ namespace VoMP.Core.Behavior
         public IEnumerable<CityBonus> ChooseTradingPostBonuses(Player player, int count)
         {
             var bonusSpaces = player.GetTradingPostBonusSpaces().ToList();
-            if (!bonusSpaces.Any())
-                throw new InvalidOperationException("No trading post bonuses available.");
             if (count >= bonusSpaces.Count)
                 return bonusSpaces.Select(x => x.CityBonus);
             else

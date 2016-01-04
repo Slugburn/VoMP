@@ -30,7 +30,7 @@ namespace VoMP.Core.Behavior
         {
             var rerollDie = new RerollDie(state.Player) {Die = state.Player.AvailableDice.First(d => d.Value == 1)};
             if (rerollDie.IsValid())
-                return state.PlayerCanPay(rerollDie.Cost) ? rerollDie : null;
+                return state.PlayerCanAfford(rerollDie) ? rerollDie : null;
             return null;
         }
 
@@ -38,7 +38,7 @@ namespace VoMP.Core.Behavior
         {
             var adjustDie = new AdjustDie(state.Player) {Die = die, Direction = direction};
             if (adjustDie.IsValid())
-                return state.PlayerCanPay(adjustDie.Cost) ? adjustDie : GenerateResourcesBehavior.GenerateResources(state, adjustDie.Cost, "adjust die");
+                return state.PlayerCanAfford(adjustDie) ? adjustDie : GenerateResourcesBehavior.GenerateResources(state, adjustDie.Cost, "adjust die");
             return null;
         }
 
@@ -46,7 +46,7 @@ namespace VoMP.Core.Behavior
         {
             var buyBlackDie = new BuyBlackDie(state.Player);
             if (!buyBlackDie.IsValid()) return null;
-            return state.PlayerCanPay(buyBlackDie.Cost) ? buyBlackDie : GenerateResourcesBehavior.GenerateResources(state, buyBlackDie.Cost, "buy black die");
+            return state.PlayerCanAfford(buyBlackDie) ? buyBlackDie : GenerateResourcesBehavior.GenerateResources(state, buyBlackDie.Cost, "buy black die");
         }
     }
 }

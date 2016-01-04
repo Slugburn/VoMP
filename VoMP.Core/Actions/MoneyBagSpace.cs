@@ -2,12 +2,16 @@
 
 namespace VoMP.Core.Actions
 {
-    public class MoneyBagSpace : Action
+    public class MoneyBagSpace : ActionSpace
     {
-        public MoneyBagSpace() : base("Money Bag")
+        public MoneyBagSpace() : base("Money Bag",1)
         {
         }
 
-        public List<Die> Dice { get; } = new List<Die>();
+        // Never considered occupied
+        public override bool IsOccupied => false;
+
+        // Player can play as many dice of his color here as necessary
+        public override bool ColorAlreadyPlayed(Color color) => false;
     }
 }

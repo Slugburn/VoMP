@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace VoMP.Core.Characters
 {
@@ -12,7 +8,8 @@ namespace VoMP.Core.Characters
         public void ModifyPlayer(Player player)
         {
             // Starts in Beijing
-            throw new NotImplementedException();
+            player.MovePawn(Location.Unknown, Location.Beijing);
+            player.BuildTradingPost(Location.Beijing);
         }
 
     }

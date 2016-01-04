@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace VoMP.Core
+﻿namespace VoMP.Core
 {
     public class CityBonus
     {
@@ -13,16 +11,15 @@ namespace VoMP.Core
 
         public static CityBonus[] CreateAll()
         {
-            return new []
+            return new[]
             {
-                new CityBonus(new Reward {Camel = 3}), 
-                new CityBonus(new Reward {OtherCityBonus = 1}), 
-                new CityBonus(new Reward {Vp = 3}), 
-                new CityBonus(new Reward {UniqueGood = 2}), 
-                new CityBonus(new Reward {Coin = 5}), 
-                new CityBonus(new Reward {Camel = 1, Coin = 3}), 
+                new CityBonus(Reward.Of.Camel(3)),
+                new CityBonus(Reward.Of.OtherCityBonus(1)),
+                new CityBonus(Reward.Of.Vp(3)),
+                new CityBonus(Reward.Of.UniqueGood(2)),
+                new CityBonus(Reward.Of.Coin(5)),
+                new CityBonus(Reward.Of.Camel(1).And.Coin(3))
             };
-
         }
 
         public override string ToString()

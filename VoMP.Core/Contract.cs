@@ -1,6 +1,6 @@
 ﻿namespace VoMP.Core
 {
-    public class Contract
+    public class Contract : IExchange
     {
         public Contract(Cost cost, Reward reward)
         {
@@ -20,12 +20,12 @@
         {
             return new[]
             {
-                new Contract(new Cost {Camel = 2, Silk = 1, Pepper = 1}, new Reward {Contract = 1, Vp = 5}),
-                new Contract(new Cost {Camel = 2, Gold = 1, Pepper = 1}, new Reward {Die = 1, Vp = 4}),
-                new Contract(new Cost {Camel = 1, Pepper = 3}, new Reward {Move = 1, Vp = 1}),
-                new Contract(new Cost {Camel = 2, Gold = 1, Silk = 1}, new Reward {UniqueGood = 2, Vp = 4}),
-                new Contract(new Cost {Camel = 1, Gold = 1}, new Reward {Camel = 3, Vp = 2}),
-                new Contract(new Cost {Camel = 1, Silk = 2}, new Reward {Coin = 5, Vp = 3})
+                new Contract(Cost.Of.Camel(2).And.Silk(1).And.Pepper(1), Reward.Of.Contract(1).And.Vp(5)),
+                new Contract(Cost.Of.Camel(2).And.Gold(1).And.Pepper(1), Reward.Of.Die(1).And.Vp(4)),
+                new Contract(Cost.Of.Camel(1).And.Pepper(3), Reward.Of.Move(1).And.Vp(1)),
+                new Contract(Cost.Of.Camel(2).And.Gold(1).And.Silk(1), Reward.Of.UniqueGood(2).And.Vp(4)),
+                new Contract(Cost.Of.Camel(1).And.Gold(1), Reward.Of.Camel(3).And.Vp(2)),
+                new Contract(Cost.Of.Camel(1).And.Silk(2), Reward.Of.Coin(5).And.Vp(3))
             };
         }
 
@@ -33,46 +33,44 @@
         {
             return new[]
             {
-                new Contract(new Cost {Camel = 2, Silk = 2, Pepper = 1}, new Reward {Coin = 3, Vp = 4}),
-                new Contract(new Cost {Camel = 2, Gold = 2, Pepper = 3}, new Reward {Camel = 5, Vp = 7}),
-                new Contract(new Cost {Camel = 2, Gold = 3, Silk = 2}, new Reward {Move = 1, Vp = 9}),
-                new Contract(new Cost {Camel = 1, Gold = 4}, new Reward {Camel = 3, Vp = 7}),
-                new Contract(new Cost {Camel = 2, Gold = 3, Pepper = 2}, new Reward {Coin = 7, Vp = 8}),
-                new Contract(new Cost {Camel = 3, Gold = 1, Silk = 1, Pepper = 1}, new Reward {Contract = 1, Vp = 6}),
-                new Contract(new Cost {Camel = 2, Silk = 3, Pepper = 2}, new Reward {Good = 1, Die = 1, Vp = 5}),
-                new Contract(new Cost {Camel = 2, Gold = 1, Pepper = 2}, new Reward {Contract = 1, Vp = 4}),
-                new Contract(new Cost {Camel = 1, Gold = 3}, new Reward {Good = 1, Vp = 6}),
-                new Contract(new Cost {Camel = 3, Gold = 1, Silk = 1, Pepper = 1}, new Reward {Die = 1, Vp = 5}),
-                new Contract(new Cost {Camel = 2, Silk = 2, Pepper = 2}, new Reward {Die = 1, Vp = 5}),
-                new Contract(new Cost {Camel = 2, Gold = 2, Silk = 2}, new Reward {Contract = 1, Vp = 7}),
-                new Contract(new Cost {Camel = 1, Pepper = 4}, new Reward {Contract = 1, Vp = 3}),
-                new Contract(new Cost {Camel = 3, Gold = 1, Silk = 1, Pepper = 1}, new Reward {Good = 1, Vp = 6}),
-                new Contract(new Cost {Camel = 1, Silk = 3}, new Reward {Good = 1, Vp = 3}),
-                new Contract(new Cost {Camel = 2, Gold = 2, Silk = 2}, new Reward {Move = 1, Vp = 7}),
-                new Contract(new Cost {Camel = 1, Gold = 4}, new Reward {Move = 1, Vp = 7}),
-                new Contract(new Cost {Camel = 2, Gold = 2, Silk = 1}, new Reward {Coin = 4, Vp = 6}),
-                new Contract(new Cost {Camel = 2, Gold = 2, Silk = 2}, new Reward {Camel = 4, Vp = 6}),
-                new Contract(new Cost {Camel = 2, Gold = 2, Silk = 3}, new Reward {Contract = 1, Vp = 8}),
-                new Contract(new Cost {Camel = 3, Gold = 1, Silk = 2, Pepper = 1},
-                    new Reward {Camel = 3, Contract = 1, Vp = 5}),
-                new Contract(new Cost {Camel = 3, Gold = 1, Silk = 2, Pepper = 1},
-                    new Reward {Camel = 3, Coin = 4, Vp = 5}),
-                new Contract(new Cost {Camel = 2, Silk = 2, Pepper = 3}, new Reward {Move = 1, Vp = 5}),
-                new Contract(new Cost {Camel = 1, Pepper = 3}, new Reward {Die = 1, Vp = 2}),
-                new Contract(new Cost {Camel = 2, Silk = 1, Pepper = 2}, new Reward {UniqueGood = 2, Vp = 3}),
-                new Contract(new Cost {Camel = 3, Gold = 1, Silk = 1, Pepper = 1}, new Reward {UniqueGood = 2, Vp = 5}),
-                new Contract(new Cost {Camel = 2, Gold = 2, Pepper = 1}, new Reward {Die = 1, Vp = 5}),
-                new Contract(new Cost {Camel = 2, Gold = 2, Silk = 1}, new Reward {Die = 1, Vp = 6}),
-                new Contract(new Cost {Camel = 2, Gold = 2, Pepper = 3}, new Reward {Coin = 7, Vp = 6}),
-                new Contract(new Cost {Camel = 3, Gold = 2, Silk = 1, Pepper = 1}, new Reward {Coin = 5, Vp = 7}),
-                new Contract(new Cost {Camel = 2, Gold = 1, Pepper = 2}, new Reward {Move = 1, Vp = 4}),
-                new Contract(new Cost {Camel = 3, Gold = 1, Silk = 1, Pepper = 1}, new Reward {Move = 1, Vp = 5}),
-                new Contract(new Cost {Camel = 2, Silk = 3, Pepper = 2}, new Reward {Coin = 6, Vp = 5}),
-                new Contract(new Cost {Camel = 2, Gold = 3, Silk = 2}, new Reward {Coin = 7, Vp = 9}),
-                new Contract(new Cost {Camel = 2, Gold = 1, Silk = 2}, new Reward {Camel = 4, Vp = 4}),
-                new Contract(new Cost {Camel = 2, Silk = 1, Pepper = 2}, new Reward {Coin = 4, Vp = 3}),
-                new Contract(new Cost {Camel = 2, Gold = 3, Pepper = 2}, new Reward {UniqueGood = 2, Vp = 9}),
-                new Contract(new Cost {Camel = 2, Gold = 2, Silk = 3}, new Reward {Camel = 4, Vp = 8})
+                new Contract(Cost.Of.Camel(2).And.Silk(2).And.Pepper(1), Reward.Of.Coin(3).And.Vp(4)),
+                new Contract(Cost.Of.Camel(2).And.Gold(2).And.Pepper(3), Reward.Of.Camel(5).And.Vp(7)),
+                new Contract(Cost.Of.Camel(2).And.Gold(3).And.Silk(2), Reward.Of.Move(1).And.Vp(9)),
+                new Contract(Cost.Of.Camel(1).And.Gold(4), Reward.Of.Camel(3).And.Vp(7)),
+                new Contract(Cost.Of.Camel(2).And.Gold(3).And.Pepper(2), Reward.Of.Coin(7).And.Vp(8)),
+                new Contract(Cost.Of.Camel(3).And.Gold(1).And.Silk(1).And.Pepper(1), Reward.Of.Contract(1).And.Vp(6)),
+                new Contract(Cost.Of.Camel(2).And.Silk(3).And.Pepper(2), Reward.Of.Good(1).And.Die(1).And.Vp(5)),
+                new Contract(Cost.Of.Camel(2).And.Gold(1).And.Pepper(2), Reward.Of.Contract(1).And.Vp(4)),
+                new Contract(Cost.Of.Camel(1).And.Gold(3), Reward.Of.Good(1).And.Vp(6)),
+                new Contract(Cost.Of.Camel(3).And.Gold(1).And.Silk(1).And.Pepper(1), Reward.Of.Die(1).And.Vp(5)),
+                new Contract(Cost.Of.Camel(2).And.Silk(2).And.Pepper(2), Reward.Of.Die(1).And.Vp(5)),
+                new Contract(Cost.Of.Camel(2).And.Gold(2).And.Silk(2), Reward.Of.Contract(1).And.Vp(7)),
+                new Contract(Cost.Of.Camel(1).And.Pepper(4), Reward.Of.Contract(1).And.Vp(3)),
+                new Contract(Cost.Of.Camel(3).And.Gold(1).And.Silk(1).And.Pepper(1), Reward.Of.Good(1).And.Vp(6)),
+                new Contract(Cost.Of.Camel(1).And.Silk(3), Reward.Of.Good(1).And.Vp(3)),
+                new Contract(Cost.Of.Camel(2).And.Gold(2).And.Silk(2), Reward.Of.Move(1).And.Vp(7)),
+                new Contract(Cost.Of.Camel(1).And.Gold(4), Reward.Of.Move(1).And.Vp(7)),
+                new Contract(Cost.Of.Camel(2).And.Gold(2).And.Silk(1), Reward.Of.Coin(4).And.Vp(6)),
+                new Contract(Cost.Of.Camel(2).And.Gold(2).And.Silk(2), Reward.Of.Camel(4).And.Vp(6)),
+                new Contract(Cost.Of.Camel(2).And.Gold(2).And.Silk(3), Reward.Of.Contract(1).And.Vp(8)),
+                new Contract(Cost.Of.Camel(3).And.Gold(1).And.Silk(2).And.Pepper(1), Reward.Of.Camel(3).And.Contract(1).And.Vp(5)),
+                new Contract(Cost.Of.Camel(3).And.Gold(1).And.Silk(2).And.Pepper(1), Reward.Of.Camel(3).And.Coin(4).And.Vp(5)),
+                new Contract(Cost.Of.Camel(2).And.Silk(2).And.Pepper(3), Reward.Of.Move(1).And.Vp(5)),
+                new Contract(Cost.Of.Camel(1).And.Pepper(3), Reward.Of.Die(1).And.Vp(2)),
+                new Contract(Cost.Of.Camel(2).And.Silk(1).And.Pepper(2), Reward.Of.UniqueGood(2).And.Vp(3)),
+                new Contract(Cost.Of.Camel(3).And.Gold(1).And.Silk(1).And.Pepper(1), Reward.Of.UniqueGood(2).And.Vp(5)),
+                new Contract(Cost.Of.Camel(2).And.Gold(2).And.Pepper(1), Reward.Of.Die(1).And.Vp(5)),
+                new Contract(Cost.Of.Camel(2).And.Gold(2).And.Silk(1), Reward.Of.Die(1).And.Vp(6)),
+                new Contract(Cost.Of.Camel(2).And.Gold(2).And.Pepper(3), Reward.Of.Coin(7).And.Vp(6)),
+                new Contract(Cost.Of.Camel(3).And.Gold(2).And.Silk(1).And.Pepper(1), Reward.Of.Coin(5).And.Vp(7)),
+                new Contract(Cost.Of.Camel(2).And.Gold(1).And.Pepper(2), Reward.Of.Move(1).And.Vp(4)),
+                new Contract(Cost.Of.Camel(3).And.Gold(1).And.Silk(1).And.Pepper(1), Reward.Of.Move(1).And.Vp(5)),
+                new Contract(Cost.Of.Camel(2).And.Silk(3).And.Pepper(2), Reward.Of.Coin(6).And.Vp(5)),
+                new Contract(Cost.Of.Camel(2).And.Gold(3).And.Silk(2), Reward.Of.Coin(7).And.Vp(9)),
+                new Contract(Cost.Of.Camel(2).And.Gold(1).And.Silk(2), Reward.Of.Camel(4).And.Vp(4)),
+                new Contract(Cost.Of.Camel(2).And.Silk(1).And.Pepper(2), Reward.Of.Coin(4).And.Vp(3)),
+                new Contract(Cost.Of.Camel(2).And.Gold(3).And.Pepper(2), Reward.Of.UniqueGood(2).And.Vp(9)),
+                new Contract(Cost.Of.Camel(2).And.Gold(2).And.Silk(3), Reward.Of.Camel(4).And.Vp(8))
             };
         }
     }

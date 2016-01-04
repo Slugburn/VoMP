@@ -24,7 +24,7 @@ namespace VoMP.Core.Behavior.Choices.Bazaar
         {
             if (Dice == null) throw new InvalidOperationException();
             _player.PlayDice(Dice, Space);
-            _player.GainReward(GetReward(), Space.Description);
+            _player.GainReward(Reward, Space.Description);
             _player.HasTakenActionThisTurn = true;
         }
 
@@ -33,11 +33,10 @@ namespace VoMP.Core.Behavior.Choices.Bazaar
             return _player.CanPlayInActionSpace(Space);
         }
 
-        public Cost GetCost()
-        {
-            return _player.GetOccupancyCost(Space, Dice, Value);
-        }
+        public Cost Cost => _player.GetOccupancyCost(Space, Dice, Value);
 
-        public abstract Reward GetReward();
+        public Reward Reward => RewardFor(Value);
+
+        protected abstract Reward RewardFor(int value);
     }
 }

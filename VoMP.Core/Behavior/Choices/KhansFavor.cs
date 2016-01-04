@@ -26,35 +26,38 @@ namespace VoMP.Core.Behavior.Choices
             if (Die == null)
                 throw new InvalidOperationException("Die value has not been specified");
             _player.PlayDice(new[] {Die}, Space);
-            var reward = GetReward();
+            var reward = Reward;
             _player.GainReward(reward, Space.Description);
             _player.HasTakenActionThisTurn = true;
         }
 
-        public Cost GetCost()
-        {
-            return Cost.None;
-        }
+        public Cost Cost => Cost.None;
 
-        public Reward GetReward()
-        {
-            return new Reward
-            {
-                Camel = 2,
-                Gold = ResourceType == Gold ? 1 : 0,
-                Silk = ResourceType == Silk ? 1 : 0,
-                Pepper = ResourceType == Pepper ? 1 : 0
-            };
-        }
+        public Reward Reward => RewardFor(ResourceType);
 
         public IList<Die> Dice => new[] {Die};
-        public int Value => MinimumValue;
+        public int Value => 6;
 
         public bool IsValid()
         {
             return _player.CanPlayInActionSpace(Space)
                    && Space.DiceCount < 4
                    && _player.AvailableDice.Any(d => !d.HasValue || d.Value >= MinimumValue);
+        }
+
+        private static Reward RewardFor(ResourceType resourceType)
+        {
+            switch (resourceType)
+            {
+                case Gold:
+                    return Reward.Of.Camel(2).And.Gold(1);
+                case Silk:
+                    return Reward.Of.Camel(2).And.Silk(1);
+                case Pepper:
+                    return Reward.Of.Camel(2).And.Pepper(1);
+                default:
+                    throw new InvalidOperationException("Invalid ResourceType");
+            }
         }
     }
 }

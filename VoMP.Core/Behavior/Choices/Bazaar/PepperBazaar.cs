@@ -9,24 +9,24 @@ namespace VoMP.Core.Behavior.Choices.Bazaar
         {
         }
 
-        public override Reward GetReward()
+        protected override Reward RewardFor(int value)
         {
-            switch (Value)
+            switch (value)
             {
                 case 1:
-                    return new Reward { Pepper = 1 };
+                    return Reward.Of.Pepper(1);
                 case 2:
-                    return new Reward { Pepper = 2 };
+                    return Reward.Of.Pepper(2);
                 case 3:
-                    return new Reward { Pepper = 2, Coin = 1 };
+                    return Reward.Of.Pepper(2).And.Coin(1);
                 case 4:
-                    return new Reward { Pepper = 3 };
+                    return Reward.Of.Pepper(3);
                 case 5:
-                    return new Reward { Pepper = 3, Coin = 2 };
+                    return Reward.Of.Pepper(3).And.Coin(2);
                 case 6:
-                    return new Reward { Pepper = 4 };
+                    return Reward.Of.Pepper(4);
                 default:
-                    throw new InvalidEnumArgumentException(nameof(Value));
+                    throw new InvalidEnumArgumentException(nameof(value));
             }
         }
     }

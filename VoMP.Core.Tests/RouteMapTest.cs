@@ -19,23 +19,21 @@ namespace VoMP.Core.Tests
         [Test]
         public void BestPath()
         {
-            var bestPath = RouteMap.Standard().BestPath(Venezia, new[] { Beijing, Sumatra, Anxi, Moscow, Kashgar });
+            var bestPath = RouteMap.Standard().BestPath(Venezia, new[] { Beijing, Sumatra, Anxi, Kashgar, Kochi });
             var endpoints = bestPath.Select(r => r.End).ToList();
             Console.WriteLine(string.Join(",",endpoints));
             Console.WriteLine("{0} Moves", bestPath.Count);
-            Console.WriteLine("{0} Camels", bestPath.Sum(r=>r.Camel));
-            Console.WriteLine("{0} Coins", bestPath.Sum(r=>r.Coin));
+            Console.WriteLine("{0} Cost", bestPath.GetCost());
         }
 
         [Test]
         public void BestPathWithOasisMovement()
         {
-            var bestPath = RouteMap.Oasis().BestPath(Venezia, new [] { Beijing, Sumatra, Anxi, Moscow, Kashgar });
+            var bestPath = RouteMap.Oasis().BestPath(Venezia, new [] { Beijing, Sumatra, Anxi, Kashgar, Kochi });
             var endpoints = bestPath.Select(r => r.End).ToList();
             Console.WriteLine(string.Join(",", endpoints));
             Console.WriteLine("{0} Moves", bestPath.Count);
-            Console.WriteLine("{0} Camels", bestPath.Sum(r => r.Camel));
-            Console.WriteLine("{0} Coins", bestPath.Sum(r => r.Coin));
+            Console.WriteLine("{0} Cost", bestPath.GetCost());
         }
     }
 }

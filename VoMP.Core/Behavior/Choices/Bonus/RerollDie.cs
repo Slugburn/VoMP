@@ -18,7 +18,9 @@
             _player.Output($"rolls {Die}");
         }
 
-        public Cost Cost { get; } = new Cost {Camel = 1};
+        public Cost Cost { get; } = Cost.Of.Camel(1);
+
+        public Reward Reward { get; } = Reward.None;
 
         public bool IsValid()
         {

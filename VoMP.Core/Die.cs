@@ -29,9 +29,9 @@ namespace VoMP.Core
 
         public bool HasValue => _value.HasValue;
 
-        public static Die Create(Color color)
+        public static Die Create(Color color, int? value = null)
         {
-            return new Die(color) {_value = null};
+            return new Die(color) {_value = value};
         }
 
         private static int RandomValue()

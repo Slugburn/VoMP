@@ -20,7 +20,9 @@ namespace VoMP.Core.Behavior.Choices.Bonus
             Die.Adjust(Direction);
         }
 
-        public Cost Cost { get; } =  new Cost { Camel = 2 };
+        public Cost Cost { get; } =  Cost.Of.Camel(2);
+
+        public Reward Reward { get; } = Reward.None;
 
         public bool IsValid()
         {

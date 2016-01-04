@@ -81,7 +81,6 @@
     <Compile Include="Behavior\IBehavior.cs" />
     <Compile Include="Behavior\ImproveDiceBehavior.cs" />
     <Compile Include="Behavior\MoveBehavior.cs" />
-    <Compile Include="Behavior\ReserveResourcesChoiceParam.cs" />
     <Compile Include="Behavior\TakeContractsBehavior.cs" />
     <Compile Include="Characters\Berke.cs" />
     <Compile Include="Characters\Character.cs" />
@@ -112,6 +111,7 @@
     <Compile Include="Extensions\EnumerableExtension.cs" />
     <Compile Include="Extensions\DieExtension.cs" />
     <Compile Include="Game.cs" />
+    <Compile Include="IExchange.cs" />
     <Compile Include="Objective.cs" />
     <Compile Include="ResourceType.cs" />
     <Compile Include="IOutput.cs" />

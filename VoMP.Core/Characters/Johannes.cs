@@ -10,7 +10,7 @@ namespace VoMP.Core.Characters
             // All oasises are adjacent to each other
             player.RouteMap = RouteMap.Oasis();
             // Bonus 3 coins
-            player.CharacterBonuses.Add(p=>p.GainReward(new Reward {Coin = 3}, Name ));
+            player.CharacterBonuses.Add(p=>p.GainReward(Reward.Of.Coin(3), Name ));
         }
 
     }

@@ -5,6 +5,7 @@ using VoMP.Core.Actions;
 using VoMP.Core.Behavior.Choices;
 using VoMP.Core.CityCards;
 using VoMP.Core.Extensions;
+using Action = System.Action;
 
 namespace VoMP.Core.Behavior
 {
@@ -27,10 +28,9 @@ namespace VoMP.Core.Behavior
 
         public Cost Shortfall { get; set; }
 
-        public List<Die> GetDiceAvailableFor(ActionSpace space) => Player.GetDiceAvailableFor(space).Except(ReservedDice).ToList();
-
         public List<Die> AvailableDice => Player.AvailableDice.Except(ReservedDice).ToList();
 
+        public List<Die> GetDiceAvailableFor(ActionSpace space) => Player.GetDiceAvailableFor(space).Except(ReservedDice).ToList();
 
         private static IEnumerable<List<Route>> GetMoves(List<Route> path, ISet<Location> tradingPosts)
         {
@@ -49,45 +49,24 @@ namespace VoMP.Core.Behavior
             ReservedResources = Cost.None;
         }
 
-        public bool PlayerCanPay(Cost cost)
-        {
-            if (cost == null) return false;
-            var adjustedCost = cost.AllowingFor(ReservedResources);
-            return Player.CanPay(adjustedCost);
-        }
-
         public Cost GetShortfall(Cost cost)
         {
             return Player.Resources.GetShortfall(cost.AllowingFor(ReservedResources));
         }
 
-        public IActionChoice MakeChoiceWithReservedResources(ReserveResourcesChoiceParam p)
+        public IDisposable ReserveResources(Cost cost, string reason)
         {
-            if (p.Cost != null && p.Cost.Rating > 0)
-            {
-                Player.Debug($"reserves {p.Cost} needed to {p.Reason}");
-                ReserveResources(p.Cost);
-            }
-            if (p.Dice != null)
-            {
-                Player.Debug($"reserves {p.Dice.ToDelimitedString("")} needed to {p.Reason}");
-                ReservedDice.AddRange(p.Dice);
-            }
-            var choice = p.MakeChoice();
-            if (p.Cost != null)
-                UnreserveResources(p.Cost);
-            p.Dice?.ForEach(d => ReservedDice.Remove(d));
-            return choice;
-        }
-
-        public void ReserveResources(Cost cost)
-        {
+            Player.Debug($"reserves {cost} needed to {reason}");
             ReservedResources = ReservedResources.Add(cost);
+            return new Disposable(() => ReservedResources = ReservedResources.Subtract(cost));
         }
 
-        public void UnreserveResources(Cost cost)
+        public IDisposable ReserveDice(IEnumerable<Die> dice, string reason)
         {
-            ReservedResources =  ReservedResources.Subtract(cost);
+            var list = dice as IList<Die> ?? dice.ToList();
+            Player.Debug($"reserves {list.ToDelimitedString("")} needed to {reason}");
+            ReservedDice.AddRange(list);
+            return new Disposable(() => list.ForEach(d => ReservedDice.Remove(d)));
         }
 
         public List<CityAction> GetValidCityActions(ResourceType resourceType)
@@ -95,13 +74,24 @@ namespace VoMP.Core.Behavior
             var player = Player;
             var cityActions = player.CityActions
                 .Where(space => !space.IsOccupied && space.Card.CanGenerate(player, resourceType))
-                .SelectMany(action => CreateCityAction(action, resourceType))
+                .SelectMany(action => CreateCityAction(action))
                 .Where(a => a.IsValid())
                 .ToList();
             return cityActions;
         }
 
-        private IEnumerable<CityAction> CreateCityAction(LargeCityAction space, ResourceType resourceType)
+        public List<CityAction> GetValidCityActions()
+        {
+            var player = Player;
+            var cityActions = player.CityActions
+                .Where(space => !space.IsOccupied)
+                .SelectMany(CreateCityAction)
+                .Where(a => a.IsValid())
+                .ToList();
+            return cityActions;
+        }
+
+        private IEnumerable<CityAction> CreateCityAction(LargeCityAction space)
         {
             var availableDice = GetDiceAvailableFor(space);
             if (!availableDice.Any()) yield break;
@@ -110,37 +100,44 @@ namespace VoMP.Core.Behavior
                 var die = availableDice.GetLowestDie(value);
                 var optionCityCard = space.Card as OptionCityCard;
                 if (optionCityCard == null)
-                    yield return new CityAction(Player, space) {Card = space.Card,  Value = value, Die = die};
+                    yield return new CityAction(Player, space) {Card = space.Card, Value = value, Die = die};
                 else
-                    foreach (var card in optionCityCard.GetOptions(Player, resourceType))
+                    foreach (var card in optionCityCard.GetOptions(Player))
                     {
-                        yield return new CityAction(Player, space) { Card = card, Value = value, Die = die };
+                        yield return new CityAction(Player, space) {Card = card, Value = value, Die = die};
                     }
             }
         }
 
-        public IActionChoice ChooseBestAction(IEnumerable<ISpaceActionChoice> choices, Func<Reward,Cost,bool> rewardMeetsShortfall)
+        public IActionChoice ChooseBestAction(IEnumerable<ISpaceActionChoice> choices, Cost cost)
         {
             var possibleActions = choices.Where(a => a != null && a.IsValid()).ToList();
             if (!possibleActions.Any()) return null;
-            var meetsRequirement = possibleActions.Where(a => a.GetReward() != null && rewardMeetsShortfall(a.GetReward(), Shortfall)).ToList();
-            var canAfford = possibleActions.Where(a => PlayerCanPay(a.GetCost())).ToList();
+            var realizedActions = possibleActions.Select(c => new RealizedActionChoice(c, RealizeReward(c.Reward), cost)).ToList();
+
+            var meetsRequirement = realizedActions.Where(a => a.Reward != null && cost.Subtract(a.Reward).Rating == 0).ToList();
+            var canAfford = realizedActions.Where(PlayerCanAfford).ToList();
             var best = meetsRequirement.Intersect(canAfford)
-                .OrderByDescending(a => a.GetReward().Rating - a.GetCost().Rating)
+                .OrderByDescending(a => a.Rating)
                 .FirstOrDefault();
-            if (best != null) return best;
-            var bestAffordable = canAfford.OrderByDescending(a => a.GetReward().Rating - a.GetCost().Rating).FirstOrDefault();
-            return bestAffordable;
+            if (best != null) return best.Choice;
+            var bestAffordable = canAfford.OrderByDescending(a => a.Rating).FirstOrDefault();
+            return bestAffordable?.Choice;
         }
 
         public Cost GetOutstandingCosts()
         {
-            return NextMove.GetCost().Add(Player.Contracts.Select(c=>c.Cost).Total()).Add(Travel.GetTravelCost(NextMove));
+            var contractCost = Player.Contracts.Select(c => c.Cost).Total();
+            if (NextMove == null) return contractCost;
+            var cost = NextMove.GetCost().Add(contractCost).Add(Travel.GetTravelCost(NextMove));
+            return cost;
         }
 
         public Cost GetOutstandingShortfall()
         {
-            return Player.Resources.GetShortfall(GetOutstandingCosts());
+            var outstandingCosts = GetOutstandingCosts();
+            var shortfall = Player.Resources.GetShortfall(outstandingCosts);
+            return shortfall;
         }
 
         public Cost GetOccupancyCost(ISpaceActionChoice choice)
@@ -154,6 +151,92 @@ namespace VoMP.Core.Behavior
             if (dice.Any(d => !d.HasValue))
                 return 6;
             return dice.GetHighestDice(count).MinValue();
+        }
+
+        private Reward RealizeReward(Reward reward)
+        {
+            while (true)
+            {
+                if (reward.OtherCityBonus + reward.TradingPostBonus + reward.Good + reward.UniqueGood == 0) return reward;
+                var realized = reward.GetConcreteRewards();
+                var behavior = Player.Behavior;
+                if (reward.OtherCityBonus > 0)
+                    realized = realized.Add(behavior.ChooseOtherCityBonus(Player).Reward);
+                if (reward.TradingPostBonus > 0)
+                {
+                    var cityBonuses = behavior.ChooseTradingPostBonuses(Player, reward.TradingPostBonus);
+                    realized = cityBonuses.Aggregate(realized, (current, cb) => current.Add(cb.Reward));
+                }
+                if (reward.Good > 0)
+                    realized = realized.Add(behavior.ChooseGoodsToGain(Player, reward.Good));
+                if (reward.UniqueGood > 0)
+                    realized = realized.Add(behavior.ChooseUniqueGoodsToGain(Player, reward.UniqueGood));
+                reward = realized;
+            }
+        }
+
+        public Cost CostIncludingNextMove(IExchange exchange)
+        {
+            var cost = exchange.Cost;
+            if (cost == null) return null;
+            if (exchange.Reward.Move > 0 && NextMove != null)
+                cost = cost.Add(NextMove.First().Cost);
+            return cost;
+        }
+
+        private class Disposable : IDisposable
+        {
+            private readonly Action _onDisposal;
+
+            public Disposable(Action onDisposal)
+            {
+                _onDisposal = onDisposal;
+            }
+
+            public void Dispose()
+            {
+                _onDisposal();
+            }
+        }
+
+        public class RealizedActionChoice : IExchange
+        {
+            private readonly Cost _targetCost;
+
+            public RealizedActionChoice(ISpaceActionChoice choice, Reward reward, Cost targetCost)
+            {
+                _targetCost = targetCost;
+                Choice = choice;
+                Reward = reward;
+            }
+
+            public ISpaceActionChoice Choice { get; set; }
+            public Cost Cost => Choice.Cost;
+            public Reward Reward { get; set; }
+            public int Rating => Reward.Rating - Choice.Cost.Rating - Choice.Space.RequiredDice*3;
+
+            public bool CanFulfill(Cost cost)
+            {
+                return Reward.Camel >= cost.Camel
+                       && Reward.Coin >= cost.Coin
+                       && Reward.Gold >= cost.Gold
+                       && Reward.Silk >= cost.Silk
+                       && Reward.Pepper >= cost.Pepper
+                       && Reward.Gold + Reward.Silk + Reward.Pepper >= cost.Good
+                       && Reward.Vp >= cost.Vp
+                       && Reward.Move >= cost.Move;
+            }
+        }
+
+        public bool PlayerCanAfford(IExchange exchange)
+        {
+            var cost = CostIncludingNextMove(exchange);
+            if (cost == null) return false;
+            if (!Player.CanPay(cost)) return false;
+            // You have to spend money to make money: add reward before checking to see if we can still cover reserved resources after making exchange
+            var adjustedResources = Player.Resources.Add(exchange.Reward.GetResources());
+            var adjustedCost = cost.AllowingFor(ReservedResources);
+            return adjustedResources.CanPay(adjustedCost);
         }
     }
 }

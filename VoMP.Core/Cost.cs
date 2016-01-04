@@ -1,27 +1,83 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using static System.Math;
 
 namespace VoMP.Core
 {
-    public class Cost
+    public class Cost : Cost.IBuilder
     {
+        private Cost()
+        {
+        }
+
         public static Cost None { get; } = new Cost();
 
-        public int Camel { get; set; }
-        public int Gold { get; set; }
-        public int Silk { get; set; }
-        public int Pepper { get; set; }
-        public int Coin { get; set; }
-        public int Good { get; set; }
-        public int Vp { get; set; }
-        public int Die { get; set; }
+        public int Camel { get; private set; }
+        public int Gold { get; private set; }
+        public int Silk { get; private set; }
+        public int Pepper { get; private set; }
+        public int Coin { get; private set; }
+        public int Good { get; private set; }
+        public int Vp { get; private set; }
+        public int Move { get; private set; }
 
+        public int Rating => Camel + Coin + Good + Pepper + Silk*2 + Gold*3;
 
-        public int Rating => Camel + Coin + Good + Pepper + Silk * 2 + Gold * 3;
+        public static IBuilder Of => new Cost();
+        public IBuilder And => Add(new Cost());
+
+        Cost IBuilder.Camel(int count)
+        {
+            Camel = count;
+            return this;
+        }
+
+        Cost IBuilder.Coin(int count)
+        {
+            Coin = count;
+            return this;
+        }
+
+        Cost IBuilder.Gold(int count)
+        {
+            Gold = count;
+            return this;
+        }
+
+        Cost IBuilder.Silk(int count)
+        {
+            Silk = count;
+            return this;
+        }
+
+        Cost IBuilder.Pepper(int count)
+        {
+            Pepper = count;
+            return this;
+        }
+
+        Cost IBuilder.Vp(int count)
+        {
+            Vp = count;
+            return this;
+        }
+
+        Cost IBuilder.Good(int count)
+        {
+            Good = count;
+            return this;
+        }
+
+        Cost IBuilder.Move(int count)
+        {
+            Move = count;
+            return this;
+        }
 
         public Reward ToReward()
         {
-            return new Reward {Camel = Camel, Gold = Gold, Silk = Silk, Pepper = Pepper, Coin = Coin, Good = Good, Vp = Vp};
+            return Reward.Of.Camel(Camel).And.Coin(Coin).And.Gold(Gold).And.Silk(Silk).And.Pepper(Pepper).And.Good(Good).And.Vp(Vp).And.Move(Move);
         }
 
         public override string ToString()
@@ -54,6 +110,8 @@ namespace VoMP.Core
                 yield return Good == 1 ? "1 Good" : $"{Good} Goods";
             if (Vp > 0)
                 yield return $"{Vp} VP";
+            if (Move > 0)
+                yield return $"{Move} Move";
         }
 
         public Cost Multiply(int factor)
@@ -66,22 +124,27 @@ namespace VoMP.Core
                 Good = Good*factor,
                 Pepper = Pepper*factor,
                 Silk = Silk*factor,
-                Vp = Vp*factor
+                Vp = Vp*factor,
+                Move = Move*factor
             };
         }
 
         public Cost Add(Cost add)
         {
+            var gold = Gold + add.Gold;
+            var silk = Silk + add.Silk;
+            var pepper = Pepper + add.Pepper;
+            var good = Good + add.Good;
             return new Cost
             {
-                Camel = Camel + add.Camel,
-                Coin = Coin + add.Coin,
-                Gold = Gold + add.Gold,
-                Silk = Silk + add.Silk,
-                Pepper = Pepper + add.Pepper,
-                Good = Good + add.Good,
-                Vp = Vp + add.Vp,
-                Die = Die + add.Die
+                Camel = Max(Camel + add.Camel, 0),
+                Coin =  Max(Coin + add.Coin,0),
+                Gold = Max(gold, 0),
+                Silk = Max(silk, 0),
+                Pepper = Max(pepper, 0),
+                Good = Max(good, 0),
+                Vp = Max(Vp + add.Vp, 0),
+                Move = Max(Move + add.Move, 0)
             };
         }
 
@@ -95,7 +158,8 @@ namespace VoMP.Core
                 Silk = Silk > 0 ? Silk + add.Silk + add.Good : 0,
                 Pepper = Pepper > 0 ? Pepper + add.Pepper + add.Good : 0,
                 Good = Good,
-                Vp = Vp + add.Vp
+                Vp = Vp + add.Vp,
+                Move = Move > 0 ? Move + add.Move : 0
             };
         }
 
@@ -103,5 +167,23 @@ namespace VoMP.Core
         {
             return Add(cost.Multiply(-1));
         }
+
+        public Cost Subtract(Reward reward)
+        {
+            return Subtract(reward.ToCost());
+        }
+
+        public interface IBuilder
+        {
+            Cost Camel(int count);
+            Cost Coin(int count);
+            Cost Gold(int count);
+            Cost Silk(int count);
+            Cost Pepper(int count);
+            Cost Vp(int count);
+            Cost Good(int count);
+            Cost Move(int count);
+        }
     }
+
 }

@@ -2,7 +2,7 @@
 
 namespace VoMP.Core.Behavior.Choices
 {
-    public interface IActionChoice
+    public interface IActionChoice : IExchange
     {
         void Execute();
         bool IsValid();

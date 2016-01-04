@@ -7,7 +7,7 @@ namespace VoMP.Core.Behavior.Choices
 {
     public class Travel : ISpaceActionChoice
     {
-        private static readonly Dictionary<int, int> TravelCost = new Dictionary<int, int>()
+        private static readonly Dictionary<int, int> TravelCost = new Dictionary<int, int>
         {
             {1, 3},
             {2, 7},
@@ -18,16 +18,17 @@ namespace VoMP.Core.Behavior.Choices
         };
 
         private readonly Player _player;
-        public ActionSpace Space { get; }
-        public IList<Die> Dice { get; set; }
-        public int Value => Path.Count;
-        public List<Route> Path { get; set; }
 
         public Travel(Player player)
         {
             _player = player;
             Space = player.Game.GetActionSpace<TravelSpace>();
         }
+
+        public List<Route> Path { get; set; }
+        public ActionSpace Space { get; }
+        public IList<Die> Dice { get; set; }
+        public int Value => Path.Count;
 
         public void Execute()
         {
@@ -45,27 +46,19 @@ namespace VoMP.Core.Behavior.Choices
             _player.Game.StartPlayer = _player;
         }
 
-        public static Cost GetTravelCost(List<Route> path)
-        {
-            var moveRequired = path.Count;
-            return new Cost {Coin = TravelCost[moveRequired]};
-        }
-
         public bool IsValid()
         {
             return _player.CanPlayInActionSpace(Space);
         }
 
-        public Cost GetCost()
-        {
-            if (Dice == null || Path == null)
-                throw new InvalidOperationException();
-            return GetTravelCost(Path).Add(_player.GetOccupancyCost(Space, Dice, Value));
-        }
+        public Cost Cost => GetTravelCost(Path).Add(_player.GetOccupancyCost(Space, Dice, Value));
 
-        public Reward GetReward()
+        public Reward Reward => Reward.Of.Move(Path.Count);
+
+        public static Cost GetTravelCost(List<Route> path)
         {
-            return new Reward {Move = Path.Count};
+            var moveRequired = path.Count;
+            return Cost.Of.Coin(TravelCost[moveRequired]);
         }
     }
 }

@@ -19,7 +19,7 @@
 
         private void BonusContract(Player player)
         {
-            player.GainReward(new Reward {Contract = 1}, Name);
+            player.GainReward(Reward.Of.Contract(1), Name);
         }
 
     }

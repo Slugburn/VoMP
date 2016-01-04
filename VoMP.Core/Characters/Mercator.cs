@@ -16,13 +16,13 @@ namespace VoMP.Core.Characters
         public void OnOtherPlayerAction(Player player, IActionChoice choice)
         {
             if (choice is GoldBazaar)
-                player.GainReward(new Reward {Gold = 1}, Name);
+                player.GainReward(Reward.Of.Gold(1),Name);
             if (choice is SilkBazaar)
-                player.GainReward(new Reward {Silk = 1}, Name);
+                player.GainReward(Reward.Of.Silk(1), Name);
             if (choice is PepperBazaar)
-                player.GainReward(new Reward {Pepper = 1}, Name);
+                player.GainReward(Reward.Of.Pepper(1), Name);
             if (choice is CamelBazaar)
-                player.GainReward(new Reward {Camel = 1}, Name);
+                player.GainReward(Reward.Of.Camel(1), Name);
         }
 
     }

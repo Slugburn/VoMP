@@ -19,9 +19,11 @@ namespace VoMP.Core.Actions
 
         public virtual bool IsOccupied => Dice.Any();
 
+        public virtual bool ColorAlreadyPlayed(Color color) => Dice.Any(x => x.Color == color);
+
         public Cost OccupancyCost(IEnumerable<Die> dice)
         {
-            return new Cost {Coin = IsOccupied ? dice.MinValue() : 0};
+            return Cost.Of.Coin(IsOccupied ? dice.MinValue() : 0);
         }
 
         public int DiceCount => Dice.Count;
@@ -38,7 +40,5 @@ namespace VoMP.Core.Actions
         {
             Dice.Clear();
         }
-
-        public bool ColorAlreadyPlayed(Color color) => Dice.Any(x => x.Color == color);
     }
 }

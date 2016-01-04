@@ -23,5 +23,8 @@
         {
             return true;
         }
+
+        public Cost Cost => _contract.Cost;
+        public Reward Reward => _contract.Reward;
     }
 }
