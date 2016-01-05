@@ -32,7 +32,7 @@ namespace VoMP.Core
         public List<Contract> CompletedContracts { get; } = new List<Contract>();
         public ISet<Location> TradingPosts { get; } = new HashSet<Location>();
         public bool HasAvailableDice => AvailableDice.Count > 0;
-        public List<Objective> Goals { get; set; }
+        public List<Objective> Objectives { get; set; }
         public List<Contract> Contracts { get; } = new List<Contract>();
         public bool HasBoughtBlackDieThisTurn { get; set; }
         public RouteMap RouteMap { get; set; } = RouteMap.Standard();
@@ -173,8 +173,9 @@ namespace VoMP.Core
 
         public void TakeTurn()
         {
+            if (!AvailableDice.Any()) return;
             Debug($"Start Turn - {AvailableDice.OrderBy(d=>d.SortOrder).ToDelimitedString("")} ({Resources})");
-            while (AvailableDice.Any())
+            while (true)
             {
                 var choice = Behavior.ChooseAction(this);
                 if (choice == null) break;
@@ -273,7 +274,7 @@ namespace VoMP.Core
             // stop traveling if all trading posts have been build
             if (TradingPosts.Count >= 9) return null;
             var pawnAt = GetPawnLocation();
-            var goalCities = Goals.SelectMany(g => new[] {g.Location1, g.Location2});
+            var goalCities = Objectives.SelectMany(g => new[] {g.Location1, g.Location2});
             var targetCities = goalCities.Concat(new[] {Location.Beijing}).Except(TradingPosts).ToList();
             if (targetCities.Any())
                 return RouteMap.BestPath(pawnAt, targetCities);
@@ -341,12 +342,12 @@ namespace VoMP.Core
                 var vpForCoins = coins/10;
                 GainReward(Reward.Of.Vp(vpForCoins), $"having {coins} coins");
             }
-            Goals.ForEach(g =>
+            Objectives.ForEach(g =>
             {
                 if (HasTradingPost(g.Location1) && HasTradingPost(g.Location2))
                     GainReward(Reward.Of.Vp(g.Vp), $"reaching {g.Location1} and {g.Location2}");
             });
-            var targets = Goals.SelectMany(g => new[] {g.Location1, g.Location2}).Distinct();
+            var targets = Objectives.SelectMany(g => new[] {g.Location1, g.Location2}).Distinct();
             var targetsReached = targets.Intersect(TradingPosts).ToList();
             var goalScore = new[] {0, 1, 3, 6, 10}[targetsReached.Count];
             GainReward(Reward.Of.Vp(goalScore), $"reaching {targetsReached.ToDelimitedString()}");
@@ -371,6 +372,7 @@ namespace VoMP.Core
 
         public void ClaimCharacter(ICharacter character)
         {
+            Output($"claims {character.Name}");
             Character = character;
             character.ModifyPlayer(this);
         }

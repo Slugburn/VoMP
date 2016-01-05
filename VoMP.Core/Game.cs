@@ -68,7 +68,7 @@ namespace VoMP.Core
 
             // Give each player two objectives
             var goalGroups = Objective.CreateAll().Shuffle().Segment(2);
-            _players.PairWithRandom(goalGroups).ForEach(x => x.Item1.Goals = x.Item2.ToList());
+            _players.PairWithRandom(goalGroups).ForEach(x => x.Item1.Objectives = x.Item2.ToList());
         }
 
         public void StartGame()

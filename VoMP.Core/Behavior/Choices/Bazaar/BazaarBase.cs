@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using VoMP.Core.Actions;
 
 namespace VoMP.Core.Behavior.Choices.Bazaar

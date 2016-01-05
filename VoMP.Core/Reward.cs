@@ -24,7 +24,7 @@ namespace VoMP.Core
         public int OtherCityBonus { get; private set; }
         public int TradingPostBonus { get; private set; }
 
-        public int Rating => Camel + Coin + Move*3 + Gold*3 + Silk*2 + Pepper + Good*3 + UniqueGood*2 + Vp + Die*3 + Move*4 + OtherCityBonus*3;
+        public int Rating => Camel + Coin + Gold*3 + Silk*2 + Pepper + Good*3 + UniqueGood*2 + Vp*2 + Die*3 + Move * 4;
         public static IRewardBuilder Of => new Reward();
         public IRewardBuilder And => Add(new Reward());
         public static Reward None { get; } = new Reward();
@@ -265,6 +265,18 @@ namespace VoMP.Core
             Reward Move(int count);
             Reward Contract(int count);
             Reward Die(int count);
+        }
+
+        public bool CanFulfill(Cost cost)
+        {
+            return Camel >= cost.Camel
+                   && Coin >= cost.Coin
+                   && Gold >= cost.Gold
+                   && Silk >= cost.Silk
+                   && Pepper >= cost.Pepper
+                   && Gold + Silk + Pepper >= cost.Good
+                   && Vp >= cost.Vp
+                   && Move >= cost.Move;
         }
     }
 }

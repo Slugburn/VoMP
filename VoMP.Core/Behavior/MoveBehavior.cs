@@ -29,7 +29,7 @@ namespace VoMP.Core.Behavior
             var moveNeeded = nextMove.Count;
 
             var cityActions = state.GetValidCityActions(ResourceType.Move);
-            var bestAction = state.ChooseBestAction(cityActions, Cost.Of.Move(moveNeeded));
+            var bestAction = state.ChooseBestAction(cityActions, Cost.Of.Move(moveNeeded).Add(nextMove.GetCost()));
             if (bestAction!= null)
                 return bestAction;
 
@@ -51,9 +51,10 @@ namespace VoMP.Core.Behavior
             if (player.CanPay(totalCost)) return travel;
 
             // Need to be able to generate resources in order to travel
-            using (state.ReserveDice(dice, "travel"))
+            var reason = $"travel {moveNeeded} spaces from {nextMove.First().Start} to {nextMove.Last().End}";
+            using (state.ReserveDice(dice, reason))
             {
-                var generateResources = GenerateResourcesBehavior.GenerateResources(state, totalCost, "travel");
+                var generateResources = GenerateResourcesBehavior.GenerateResources(state, totalCost, reason);
                 return generateResources;
             }
         }
@@ -68,14 +69,14 @@ namespace VoMP.Core.Behavior
             if (completeContract != null) return completeContract;
 
             // can we use the gold bazaar to move?
-            var actionChoice = MoveUsingGoldBazaar(state, moveCost);
+            var actionChoice = MoveUsingGoldBazaar(state);
             if (actionChoice != null) return actionChoice;
 
             // are there any move contracts available to us?
             return TakeContractsBehavior.TakeContracts(state, c => c.Reward.Move > 0);
         }
 
-        private static IActionChoice MoveUsingGoldBazaar(AiState state, Cost moveCost)
+        private static IActionChoice MoveUsingGoldBazaar(AiState state)
         {
             var player = state.Player;
             var goldBazaar = new GoldBazaar(player) {Value = 5};
@@ -83,7 +84,7 @@ namespace VoMP.Core.Behavior
             var dice = player.AvailableDice.GetLowestDice(3, 5);
             goldBazaar.Dice = dice;
             if (dice.Count < 2) return null;
-            var cost = moveCost.Add(state.GetOccupancyCost(goldBazaar));
+            var cost = state.CostIncludingNextMove(goldBazaar);
             if (dice.Count == 3)
                 return player.CanPay(cost) ? goldBazaar : GenerateResourcesBehavior.GenerateResources(state, cost, "visit the gold bazaar");
             if (!player.CanPay(cost)) return null;

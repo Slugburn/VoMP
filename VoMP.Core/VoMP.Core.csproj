@@ -59,6 +59,7 @@
     <Compile Include="Actions\TravelSpace.cs" />
     <Compile Include="Behavior\AiBehavior.cs" />
     <Compile Include="Behavior\AiState.cs" />
+    <Compile Include="Behavior\Choices\Bazaar\Bazaar.cs" />
     <Compile Include="Behavior\Choices\Bazaar\BazaarBase.cs" />
     <Compile Include="Behavior\Choices\Bazaar\CamelBazaar.cs" />
     <Compile Include="Behavior\Choices\Bazaar\GoldBazaar.cs" />

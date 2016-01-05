@@ -22,7 +22,7 @@ namespace VoMP.Core
         public int Vp { get; private set; }
         public int Move { get; private set; }
 
-        public int Rating => Camel + Coin + Good + Pepper + Silk*2 + Gold*3;
+        public int Rating => Camel + Coin + Good + Pepper + Silk*2 + Gold*3 + Vp*2 + Move*4;
 
         public static IBuilder Of => new Cost();
         public IBuilder And => Add(new Cost());
@@ -183,6 +183,20 @@ namespace VoMP.Core
             Cost Vp(int count);
             Cost Good(int count);
             Cost Move(int count);
+        }
+
+        public Cost GetConcreteCosts()
+        {
+            return new Cost
+            {
+                Camel = Camel,
+                Coin = Coin,
+                Gold = Gold,
+                Pepper = Pepper,
+                Silk = Silk,
+                Vp = Vp,
+                Move = Move
+            };
         }
     }
 

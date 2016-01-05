@@ -72,6 +72,7 @@ namespace VoMP.Core
             if (cost.Silk > Silk) return false;
             if (cost.Pepper > Pepper) return false;
             if (cost.Good + cost.Gold + cost.Silk + cost.Pepper > Gold + Silk + Pepper) return false;
+            if (cost.Vp > Vp) return false;
             return true;
         }
 
@@ -115,13 +116,16 @@ namespace VoMP.Core
             var silk = Abs(Min(Silk - cost.Silk, 0));
             var pepper = Abs(Min(Pepper - cost.Pepper, 0));
             var good = Abs(Min(remainingGoods - cost.Good, 0));
+            var vp = Abs(Min(Vp - cost.Vp, 0));
             return Cost.Of
                 .Camel(camel)
                 .And.Coin(coin)
                 .And.Gold(gold)
                 .And.Silk(silk)
                 .And.Pepper(pepper)
-                .And.Good(good);
+                .And.Good(good)
+                .And.Move(cost.Move)
+                .And.Vp(vp);
         }
 
         public bool Equals(ResourceBag other) => Camel == other.Camel && Coin == other.Coin && Gold == other.Gold && Silk == other.Silk && Pepper == other.Pepper && Vp == other.Vp;

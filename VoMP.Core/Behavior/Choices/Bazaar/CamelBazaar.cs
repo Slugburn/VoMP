@@ -12,5 +12,10 @@ namespace VoMP.Core.Behavior.Choices.Bazaar
         {
             return Reward.Of.Camel(Value);
         }
+
+        public override string ToString()
+        {
+            return $"Camel Bazaar ({Value})";
+        }
     }
 }

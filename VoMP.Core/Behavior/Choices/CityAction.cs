@@ -44,5 +44,10 @@ namespace VoMP.Core.Behavior.Choices
         public Reward Reward => Card.GetReward(_player, Value);
 
         public IList<Die> Dice => new[] {Die};
+
+        public override string ToString()
+        {
+            return $"{Cost}->{Reward}";
+        }
     }
 }

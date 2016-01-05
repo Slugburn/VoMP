@@ -28,22 +28,31 @@ namespace VoMP.Core.Behavior
 
         private IActionChoice MakeChoice(Player player)
         {
-            var move = MoveBehavior.Move(State);
-            if (move != null) return move;
+            if (player.Contracts.Count == 0)
+            {
+                using (State.ReserveResources(State.GetOutstandingCosts(), "move"))
+                {
+                    // Try to get more contracts
+                    var takeContracts = TakeContractsBehavior.TakeContracts(State, c => true);
+                    if (takeContracts != null) return takeContracts;
+                }
+            }
 
-            State.ClearResourceReserves();
+            // Move
+                var move = MoveBehavior.Move(State);
+            if (move != null) return move;
 
             // Try to complete contracts
             var completeContract = CompleteContractBehavior.CompleteContract(State, c => c.Reward.Move == 0);
             if (completeContract != null) return completeContract;
 
-            // Score VP
-            var cityAction = GenerateResourcesBehavior.GenerateVp(State);
-            if (cityAction != null)
-                return cityAction;
 
             using (State.ReserveResources(State.GetOutstandingCosts(), "move and complete contracts"))
             {
+                // Score VP
+                var generateVp = GenerateResourcesBehavior.GenerateResources(State, Cost.Of.Vp(4), "score VP");
+                if (generateVp != null) return generateVp;
+
                 // Try to get more contracts
                 if (player.Contracts.Count == 0)
                 {
@@ -72,10 +81,10 @@ namespace VoMP.Core.Behavior
 //                if (takeContracts2 != null) return takeContracts2;
 //            }
 
-            var pepperBazaar = GenerateResourcesBehavior.VisitBazaar(state, new PepperBazaar(state.Player));
+            var pepperBazaar = GenerateResourcesBehavior.VisitBazaar<PepperBazaar>(state).OrderByDescending(a=>a.Value).FirstOrDefault();
             if (pepperBazaar != null && pepperBazaar.Cost.Coin == 0) return pepperBazaar;
 
-            var camelBazaar = GenerateResourcesBehavior.VisitBazaar(state, new CamelBazaar(state.Player));
+            var camelBazaar = GenerateResourcesBehavior.VisitBazaar<CamelBazaar>(state).OrderByDescending(a=>a.Value).FirstOrDefault();
             if (camelBazaar != null && camelBazaar.Cost.Coin == 0) return camelBazaar;
 
             return null;
@@ -112,10 +121,15 @@ namespace VoMP.Core.Behavior
         public Reward ChooseGoodsToGain(Player player, int count)
         {
             var shortfall = State.GetOutstandingShortfall();
-            if (shortfall == null || shortfall.Gold > 0) return Reward.Of.Gold(count);
-            if (shortfall.Silk > 0) return Reward.Of.Silk(count);
-            if (shortfall.Pepper > 0) return Reward.Of.Pepper(count);
-            return Reward.Of.Gold(count);
+            if (shortfall == null) return Reward.Of.Gold(count);
+            var gold = Math.Min(shortfall.Gold, count);
+            count -= gold;
+            var silk = Math.Min(shortfall.Silk, count);
+            count -= silk;
+            var pepper = Math.Min(shortfall.Pepper, count);
+            count -= pepper;
+            gold += count;
+            return Reward.Of.Gold(gold).And.Silk(silk).And.Pepper(pepper);
         }
 
         public Reward ChooseUniqueGoodsToGain(Player player, int count)

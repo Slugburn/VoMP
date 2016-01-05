@@ -29,5 +29,10 @@ namespace VoMP.Core.Behavior.Choices.Bazaar
                     throw new InvalidEnumArgumentException(nameof(value));
             }
         }
+
+        public override string ToString()
+        {
+            return $"Silk Bazaar ({Value})";
+        }
     }
 }

@@ -44,11 +44,6 @@ namespace VoMP.Core.Behavior
             }
         }
 
-        public void ClearResourceReserves()
-        {
-            ReservedResources = Cost.None;
-        }
-
         public Cost GetShortfall(Cost cost)
         {
             return Player.Resources.GetShortfall(cost.AllowingFor(ReservedResources));
@@ -56,7 +51,8 @@ namespace VoMP.Core.Behavior
 
         public IDisposable ReserveResources(Cost cost, string reason)
         {
-            Player.Debug($"reserves {cost} needed to {reason}");
+            if (cost.Rating >0)
+                Player.Debug($"reserves {cost} needed to {reason}");
             ReservedResources = ReservedResources.Add(cost);
             return new Disposable(() => ReservedResources = ReservedResources.Subtract(cost));
         }
@@ -64,7 +60,8 @@ namespace VoMP.Core.Behavior
         public IDisposable ReserveDice(IEnumerable<Die> dice, string reason)
         {
             var list = dice as IList<Die> ?? dice.ToList();
-            Player.Debug($"reserves {list.ToDelimitedString("")} needed to {reason}");
+            if (list.Any())
+                Player.Debug($"reserves {list.ToDelimitedString("")} needed to {reason}");
             ReservedDice.AddRange(list);
             return new Disposable(() => list.ForEach(d => ReservedDice.Remove(d)));
         }
@@ -109,20 +106,54 @@ namespace VoMP.Core.Behavior
             }
         }
 
-        public IActionChoice ChooseBestAction(IEnumerable<ISpaceActionChoice> choices, Cost cost)
+        public IActionChoice ChooseBestAction(IEnumerable<IActionChoice> choices, Cost shortfall)
         {
             var possibleActions = choices.Where(a => a != null && a.IsValid()).ToList();
+            if (shortfall.Move > 0)
+                possibleActions = possibleActions.Where(a => a.Reward.Move == shortfall.Move).ToList();
             if (!possibleActions.Any()) return null;
-            var realizedActions = possibleActions.Select(c => new RealizedActionChoice(c, RealizeReward(c.Reward), cost)).ToList();
-
-            var meetsRequirement = realizedActions.Where(a => a.Reward != null && cost.Subtract(a.Reward).Rating == 0).ToList();
-            var canAfford = realizedActions.Where(PlayerCanAfford).ToList();
-            var best = meetsRequirement.Intersect(canAfford)
-                .OrderByDescending(a => a.Rating)
+            var realizedActions = possibleActions
+                .Select(c => new RealizedActionChoice(c, RealizeReward(c.Reward), RealizeCost(c.Cost), shortfall))
+                .Where(c=>c.Rating >= 0)
+                .ToList();
+            var bestAction = realizedActions
+                .Where(x => x.EffectivenessRating == 0)
+                .OrderByDescending(x=>x.Rating)
                 .FirstOrDefault();
-            if (best != null) return best.Choice;
-            var bestAffordable = canAfford.OrderByDescending(a => a.Rating).FirstOrDefault();
-            return bestAffordable?.Choice;
+            var bestChoice = TryChoice(bestAction);
+            if (bestChoice != null) return bestChoice;
+
+            var meetsRequirements = realizedActions
+                .Where(x => x.EffectivenessRating == 0)
+                .OrderBy(x => x.Cost.Rating).ThenByDescending(x => x.Rating)
+                .FirstOrDefault();
+            var choiceThatMeetsRequirements = TryChoice(meetsRequirements);
+
+            var canAfford = realizedActions.Where(PlayerCanAfford).ToList();
+                var mostEffectiveRating = canAfford.Any() ? canAfford.Min(a => a.EffectivenessRating) : int.MaxValue;
+                var mostEffective = canAfford
+                    .Where(a => a.EffectivenessRating == mostEffectiveRating)
+                    .OrderByDescending(a => a.Rating)
+                    .FirstOrDefault();
+            var mostEffectiveChoice = mostEffective?.Choice;
+
+            if (choiceThatMeetsRequirements == null) return mostEffectiveChoice;
+            if (mostEffectiveChoice == null) return choiceThatMeetsRequirements;
+            return mostEffectiveChoice.Reward.Rating > choiceThatMeetsRequirements.Reward.Rating ? mostEffectiveChoice : choiceThatMeetsRequirements;
+        }
+
+        private IActionChoice TryChoice(RealizedActionChoice choice)
+        {
+            if (choice == null) return null;
+            var bestChoice = choice.Choice;
+            if (PlayerCanAfford(choice)) return bestChoice;
+            using (ReserveDice(bestChoice is ISpaceActionChoice ? ((ISpaceActionChoice) bestChoice).Dice : new Die[0], bestChoice.ToString()))
+            {
+                var bestCost = CostIncludingNextMove(bestChoice);
+                var generateResources = GenerateResourcesBehavior.GenerateResources(this, bestCost, bestChoice.ToString());
+                if (generateResources != null && generateResources.Reward.CanFulfill(bestCost)) return generateResources;
+            }
+            return null;
         }
 
         public Cost GetOutstandingCosts()
@@ -175,12 +206,24 @@ namespace VoMP.Core.Behavior
             }
         }
 
+        private Cost RealizeCost(Cost cost)
+        {
+            var realized = cost.GetConcreteCosts();
+            var behavior = Player.Behavior;
+            if (cost.Good == 0) return realized;
+            var toGenerate = GetShortfall(cost).Good;
+            var toSpend = behavior.ChooseGoodsToPay(Player, Cost.Of.Good(cost.Good - toGenerate));
+            realized = realized.Add(Cost.Of.Pepper(toGenerate)).Add(toSpend);
+            return realized;
+        }
+
         public Cost CostIncludingNextMove(IExchange exchange)
         {
             var cost = exchange.Cost;
             if (cost == null) return null;
-            if (exchange.Reward.Move > 0 && NextMove != null)
-                cost = cost.Add(NextMove.First().Cost);
+            var moves = exchange.Reward.Move;
+            if (moves > 0 && NextMove != null)
+                cost = cost.Add(NextMove.Take(moves).GetCost());
             return cost;
         }
 
@@ -201,31 +244,27 @@ namespace VoMP.Core.Behavior
 
         public class RealizedActionChoice : IExchange
         {
-            private readonly Cost _targetCost;
+            private readonly Cost _shortfall;
+            private readonly int _requiredDice;
 
-            public RealizedActionChoice(ISpaceActionChoice choice, Reward reward, Cost targetCost)
+            public RealizedActionChoice(IActionChoice choice, Reward reward, Cost cost, Cost shortfall)
             {
-                _targetCost = targetCost;
+                _shortfall = shortfall;
                 Choice = choice;
                 Reward = reward;
+                Cost = cost;
+                EffectivenessRating = shortfall.Subtract(Reward).Rating;
+                var spaceAction = choice as ISpaceActionChoice;
+                _requiredDice = spaceAction?.Space.RequiredDice ?? 0;
             }
 
-            public ISpaceActionChoice Choice { get; set; }
-            public Cost Cost => Choice.Cost;
+            public IActionChoice Choice { get; set; }
+            public Cost Cost { get; set; }
             public Reward Reward { get; set; }
-            public int Rating => Reward.Rating - Choice.Cost.Rating - Choice.Space.RequiredDice*3;
+            public int Rating => Reward.Rating - Choice.Cost.Rating - _requiredDice*3;
 
-            public bool CanFulfill(Cost cost)
-            {
-                return Reward.Camel >= cost.Camel
-                       && Reward.Coin >= cost.Coin
-                       && Reward.Gold >= cost.Gold
-                       && Reward.Silk >= cost.Silk
-                       && Reward.Pepper >= cost.Pepper
-                       && Reward.Gold + Reward.Silk + Reward.Pepper >= cost.Good
-                       && Reward.Vp >= cost.Vp
-                       && Reward.Move >= cost.Move;
-            }
+            // Lower is better
+            public int EffectivenessRating { get; }
         }
 
         public bool PlayerCanAfford(IExchange exchange)
