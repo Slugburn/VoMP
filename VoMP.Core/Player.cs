@@ -4,7 +4,6 @@ using System.Linq;
 using VoMP.Core.Actions;
 using VoMP.Core.Behavior;
 using VoMP.Core.Behavior.Choices;
-using VoMP.Core.Behavior.Choices.Bonus;
 using VoMP.Core.Characters;
 using VoMP.Core.Extensions;
 
@@ -226,6 +225,8 @@ namespace VoMP.Core
                 Game.GetMapSpace(start).RemovePawn(Color);
             _pawnLocation = end;
             Game.GetMapSpace(end).AddPawn(Color);
+            if (CreatesTradingPostsWhileMoving)
+                BuildTradingPost(end);
         }
 
         public void Move(List<Route> path)
@@ -234,21 +235,27 @@ namespace VoMP.Core
             var start = path.First().Start;
             var end = path.Last().End;
             PayCost(cost, $"move {path.Count} from {start} to {end}");
-            MovePawn(start, end);
-            if (end.IsTradeLocation() && !TradingPosts.Contains(end))
-            {
-                BuildTradingPost(end);
-            }
+            foreach (var route in path)
+                MovePawn(route.Start, route.End);
+            BuildTradingPost(end);
+        }
+
+        private bool CanBuildTradingPostAt(Location end)
+        {
+            return end.IsTradeCity() && !TradingPosts.Contains(end);
         }
 
         public void BuildTradingPost(Location end)
         {
+            if (!CanBuildTradingPostAt(end)) return;
             Output($"builds a trading post in {end}");
             TradingPosts.Add(end);
             if (TradingPosts.Count == 8)
                 GainReward(Reward.Of.Vp(5), "building 8th trading post");
             if (TradingPosts.Count == 9)
                 GainReward(Reward.Of.Vp(10), "building 9th trading post");
+            if (TradingPosts.Count == 11)
+                GainReward(Reward.Of.Vp(10), "building 11th trading post");
             var endSpace = Game.GetMapSpace(end);
             endSpace.TradingPosts.Add(Color);
             if (endSpace.OutpostBonus != null)
@@ -267,20 +274,6 @@ namespace VoMP.Core
         {
             if (!HasTakenActionThisTurn)
                 Game.Debug($"{Color,-6}: [DEBUG] {s}");
-        }
-
-        public List<Route> GetBestPath()
-        {
-            // stop traveling if all trading posts have been build
-            if (TradingPosts.Count >= 9) return null;
-            var pawnAt = GetPawnLocation();
-            var goalCities = Objectives.SelectMany(g => new[] {g.Location1, g.Location2});
-            var targetCities = goalCities.Concat(new[] {Location.Beijing}).Except(TradingPosts).ToList();
-            if (targetCities.Any())
-                return RouteMap.BestPath(pawnAt, targetCities);
-            // continue building trading posts once goal cities have been reached
-            var noTradingPost = Locations.All.Where(l => l.IsTradeLocation()).Except(TradingPosts).ToList();
-            return noTradingPost.Select(t => RouteMap.ShortestPath(pawnAt, t)).OrderBy(p => p.Count).First();
         }
 
         public void PlayDice(IList<Die> dice, ActionSpace space)
@@ -328,6 +321,8 @@ namespace VoMP.Core
         }
 
         public ICharacter Character { get; private set; }
+        public bool CreatesTradingPostsWhileMoving { get; set; }
+        public int MaxTradingPosts { get; set; } = 9;
 
         public bool HasTradingPostBonusFor(ResourceType resourceType)
         {

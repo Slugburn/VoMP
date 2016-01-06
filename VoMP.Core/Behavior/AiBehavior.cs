@@ -13,7 +13,7 @@ namespace VoMP.Core.Behavior
 
         public IActionChoice ChooseAction(Player player)
         {
-            State = new AiState(player);
+            State = new AiState(player, GetBestPath(player));
 
             // Try to move
             var choice = MakeChoice(player);
@@ -75,12 +75,6 @@ namespace VoMP.Core.Behavior
             var khansFavor = GenerateResourcesBehavior.UseKhansFavor(state);
             if (khansFavor != null) return khansFavor;
 
-//            if (player.Contracts.Count < 2)
-//            {
-//                var takeContracts2 = TakeContractsBehavior.TakeContracts(State, c => true);
-//                if (takeContracts2 != null) return takeContracts2;
-//            }
-
             var pepperBazaar = GenerateResourcesBehavior.VisitBazaar<PepperBazaar>(state).OrderByDescending(a=>a.Value).FirstOrDefault();
             if (pepperBazaar != null && pepperBazaar.Cost.Coin == 0) return pepperBazaar;
 
@@ -92,8 +86,8 @@ namespace VoMP.Core.Behavior
 
         public List<Route> GetMovePath(Player player, int distance)
         {
-            var bestPath = player.GetBestPath();
-            return bestPath?.Take(distance).ToList();
+            var bestPath = GetBestPath(player);
+            return Enumerable.ToList<Route>(bestPath?.Take(distance));
         }
 
         public CityBonus ChooseOtherCityBonus(Player player)
@@ -163,6 +157,20 @@ namespace VoMP.Core.Behavior
                 return bonusSpaces.Select(x => x.CityBonus);
             else
                 return bonusSpaces.Take(count).Select(x => x.CityBonus);
+        }
+
+        public static List<Route> GetBestPath(Player player)
+        {
+            // stop traveling if all trading posts have been built
+            if (player.TradingPosts.Count >= player.MaxTradingPosts) return null;
+            var pawnAt = player.GetPawnLocation();
+            var goalCities = player.Objectives.SelectMany(g => new[] {g.Location1, g.Location2});
+            var targetCities = goalCities.Concat(new[] {Location.Beijing}).Except(player.TradingPosts).ToList();
+            if (targetCities.Any())
+                return player.RouteMap.BestPath(pawnAt, targetCities);
+            // continue building trading posts once goal cities have been reached
+            var noTradingPost = Locations.All.Where(l => l.IsTradeCity()).Except(player.TradingPosts).ToList();
+            return noTradingPost.Select(t => player.RouteMap.ShortestPath(pawnAt, t)).OrderBy(p => p.Count).First();
         }
     }
 }

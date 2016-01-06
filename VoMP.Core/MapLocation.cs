@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using VoMP.Core.Actions;
-using VoMP.Core.CityCards;
 using VoMP.Core.Extensions;
 
 namespace VoMP.Core

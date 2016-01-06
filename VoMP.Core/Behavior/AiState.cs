@@ -11,10 +11,10 @@ namespace VoMP.Core.Behavior
 {
     public class AiState
     {
-        public AiState(Player player)
+        public AiState(Player player, List<Route> bestPath)
         {
             Player = player;
-            BestPath = player.GetBestPath();
+            BestPath = bestPath;
             NextMove = BestPath != null ? GetMoves(BestPath, player.TradingPosts).First() : null;
         }
 
@@ -38,7 +38,7 @@ namespace VoMP.Core.Behavior
             foreach (var route in path)
             {
                 list.Add(route);
-                if (!route.End.IsTradeLocation() || tradingPosts.Contains(route.End)) continue;
+                if (!route.End.IsTradeCity() || tradingPosts.Contains(route.End)) continue;
                 yield return list;
                 list = new List<Route>();
             }

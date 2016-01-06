@@ -27,7 +27,7 @@ namespace VoMP.Core
             return location.ToString().StartsWith("Oasis");
         }
 
-        public static bool IsTradeLocation(this Location location)
+        public static bool IsTradeCity(this Location location)
         {
             return !IsOasis(location) && location != Venezia;
         }

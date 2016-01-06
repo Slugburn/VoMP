@@ -5,6 +5,7 @@ using NUnit.Framework;
 using VoMP.Core.Actions;
 using VoMP.Core.Behavior;
 using VoMP.Core.CityCards;
+using VoMP.Core.Extensions;
 using static VoMP.Core.Location;
 
 namespace VoMP.Core.Tests
@@ -22,9 +23,11 @@ namespace VoMP.Core.Tests
             {
                 _game = new Game();
                 _game.SetUp();
+                // clear all outpost bonuses to prevent random bonuses from changing expected outcomes
+                _game.GetMapLocations().ForEach(l=>l.OutpostBonus = null);
                 _player = _game.StartPlayer;
                 _player.AvailableDice = new List<Die>();
-                _player.Behavior = new AiBehavior {State = new AiState(_player)};
+                _player.Behavior = new AiBehavior {State = new AiState(_player, AiBehavior.GetBestPath(_player))};
 
                 _nextMove = new Route[0];
             }
@@ -103,7 +106,7 @@ namespace VoMP.Core.Tests
 
             private AiState GetState()
             {
-                var state = new AiState(_player);
+                var state = new AiState(_player, AiBehavior.GetBestPath(_player));
                 state.NextMove.AddRange(_nextMove);
                 ((AiBehavior) _player.Behavior).State = state;
                 return state;
@@ -172,7 +175,7 @@ namespace VoMP.Core.Tests
                 .SetContracts()
                 .SetAvailableDice(6, 6, 6, 6, 6)
                 .SetLocation(Samarcanda)
-                .SetGoals(new Objective(Alexandria,Samarcanda,5), new Objective(Kochi, Samarcanda,5))
+                .SetGoals(new Objective(Alexandria,Sumatra,5), new Objective(Kochi, Sumatra,5))
                 .GenerateResources(Cost.Of.Move(3))
                 .VerifyLocation(Alexandria);
         }

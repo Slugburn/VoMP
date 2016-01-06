@@ -6,7 +6,8 @@
         public void ModifyPlayer(Player player)
         {
             // Two black trading posts, creates trading post while passing through, 10 VP for 11th trading post
-            throw new System.NotImplementedException();
+            player.CreatesTradingPostsWhileMoving = true;
+            player.MaxTradingPosts = 11;
         }
     }
 }
