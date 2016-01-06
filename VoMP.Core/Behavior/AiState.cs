@@ -15,7 +15,18 @@ namespace VoMP.Core.Behavior
         {
             Player = player;
             BestPath = bestPath;
-            NextMove = BestPath != null ? GetMoves(BestPath, player.TradingPosts).First() : null;
+            NextMove = GetNextMove();
+        }
+
+        private List<Route> GetNextMove()
+        {
+            if (BestPath == null) return null;
+            if (!Player.CreatesTradingPostsWhileMoving)
+                return GetMoves(BestPath, Player.TradingPosts).First();
+
+            if (Player.Contracts.Any(x => x.Reward.Move > 0 && Player.CanPay(x.Cost)))
+                return BestPath.Take(1).ToList();
+            return BestPath.Take(4).ToList();
         }
 
         public Player Player { get; }

@@ -43,9 +43,8 @@ namespace VoMP.Core.Behavior
             if (move != null) return move;
 
             // Try to complete contracts
-            var completeContract = CompleteContractBehavior.CompleteContract(State, c => c.Reward.Move == 0);
+            var completeContract = CompleteContractBehavior.CompleteContract(State, c => c.Reward.Move == 0 || player.CreatesTradingPostsWhileMoving);
             if (completeContract != null) return completeContract;
-
 
             using (State.ReserveResources(State.GetOutstandingCosts(), "move and complete contracts"))
             {
@@ -87,7 +86,7 @@ namespace VoMP.Core.Behavior
         public List<Route> GetMovePath(Player player, int distance)
         {
             var bestPath = GetBestPath(player);
-            return Enumerable.ToList<Route>(bestPath?.Take(distance));
+            return (bestPath?.Take(distance))?.ToList();
         }
 
         public CityBonus ChooseOtherCityBonus(Player player)
