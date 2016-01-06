@@ -11,9 +11,10 @@ namespace VoMP.Core
 {
     public class Player
     {
-        public IBehavior Behavior { get; set; }
         private readonly int _startingPosition;
         private Location _pawnLocation;
+
+        public Action<Player, IActionChoice> NotifyOfActionChoice = (player, choice) => { };
 
         private Player(Game game, Color color, int startingPosition)
         {
@@ -23,6 +24,7 @@ namespace VoMP.Core
             Behavior = new AiBehavior();
         }
 
+        public IBehavior Behavior { get; set; }
         public List<Die> AvailableDice { get; set; }
         public Game Game { get; }
         public Color Color { get; set; }
@@ -38,6 +40,11 @@ namespace VoMP.Core
         public bool HasTakenActionThisTurn { get; set; }
         public List<LargeCityAction> CityActions { get; } = new List<LargeCityAction>();
         public List<Action<Player>> CharacterBonuses { get; } = new List<Action<Player>>();
+        public bool RollsDice { get; set; } = true;
+        public Func<ActionSpace, IEnumerable<Die>, int, Cost> GetOccupancyCost { get; set; } = (space, dice, value) => DefaultGetOccupancyCost(space, dice, value);
+        public ICharacter Character { get; private set; }
+        public bool CreatesTradingPostsWhileMoving { get; set; }
+        public int MaxTradingPosts { get; set; } = 9;
 
         public static Player Create(Game game, Color color, int startingOrder)
         {
@@ -76,8 +83,6 @@ namespace VoMP.Core
             if (compensation <= 0) return;
             GainReward(ChooseCamelOrCoin(compensation), "compensation");
         }
-
-        public bool RollsDice { get; set; } = true;
 
         public IEnumerable<MapLocation> GetTradingPostBonusSpaces()
         {
@@ -173,23 +178,21 @@ namespace VoMP.Core
         public void TakeTurn()
         {
             if (!AvailableDice.Any()) return;
-            Debug($"Start Turn - {AvailableDice.OrderBy(d=>d.SortOrder).ToDelimitedString("")} ({Resources})");
+            Debug($"Start Turn - {AvailableDice.OrderBy(d => d.SortOrder).ToDelimitedString("")} ({Resources})");
             while (true)
             {
                 var choice = Behavior.ChooseAction(this);
                 if (choice == null) break;
                 var spaceActionChoice = choice as ISpaceActionChoice;
-                if (spaceActionChoice != null && !spaceActionChoice.Dice.All(d=>d.HasValue))
+                if (spaceActionChoice != null && !spaceActionChoice.Dice.All(d => d.HasValue))
                     throw new UnassignedDieException();
                 choice.Execute();
                 // notify other players of action choice
-                Game.GetPlayers().Except(new[] {this}).ForEach(player=>player.NotifyOfActionChoice(player, choice));
+                Game.GetPlayers().Except(new[] {this}).ForEach(player => player.NotifyOfActionChoice(player, choice));
             }
             HasBoughtBlackDieThisTurn = false;
             HasTakenActionThisTurn = false;
         }
-
-        public Action<Player, IActionChoice> NotifyOfActionChoice = (player,choice) => { };
 
         public bool HasTradingPost(Location location)
         {
@@ -309,8 +312,6 @@ namespace VoMP.Core
             return availableDice.Count >= space.RequiredDice;
         }
 
-        public Func<ActionSpace, IEnumerable<Die>, int, Cost> GetOccupancyCost { get; set; } = (space, dice, value) => DefaultGetOccupancyCost(space, dice, value);
-
         private static Cost DefaultGetOccupancyCost(ActionSpace space, IEnumerable<Die> dice, int value)
         {
             if (!space.IsOccupied) return Cost.None;
@@ -319,10 +320,6 @@ namespace VoMP.Core
             var cost = Cost.Of.Coin(coin);
             return cost;
         }
-
-        public ICharacter Character { get; private set; }
-        public bool CreatesTradingPostsWhileMoving { get; set; }
-        public int MaxTradingPosts { get; set; } = 9;
 
         public bool HasTradingPostBonusFor(ResourceType resourceType)
         {
