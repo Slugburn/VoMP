@@ -2,6 +2,7 @@
 using System.Linq;
 using log4net.Config;
 using NUnit.Framework;
+using VoMP.Core.Characters;
 using VoMP.Core.Extensions;
 
 namespace VoMP.Core.Tests
@@ -16,7 +17,7 @@ namespace VoMP.Core.Tests
             var g = new Game();
             try
             {
-                g.SetUp();
+                g.SetUp(Character.CreateBasic());
                 g.StartGame();
             }
             finally

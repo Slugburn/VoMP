@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace VoMP.Core.Characters
+﻿namespace VoMP.Core.Characters
 {
     public class NicoloAndMarco : ICharacter
     {
@@ -12,8 +6,14 @@ namespace VoMP.Core.Characters
         public void ModifyPlayer(Player player)
         {
             // Two pawns, bonus camel
-            throw new NotImplementedException();
+            player.PawnCount = 2;
+            player.CharacterBonuses.Add(BonusCamel);
+
         }
 
+        private void BonusCamel(Player player)
+        {
+            player.GainReward(Reward.Of.Camel(1), Name);
+        }
     }
 }

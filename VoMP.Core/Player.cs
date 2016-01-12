@@ -12,7 +12,7 @@ namespace VoMP.Core
     public class Player
     {
         private readonly int _startingPosition;
-        private Location _pawnLocation;
+        private List<Location> _pawnLocations = new List<Location>();
 
         public Action<Player, IActionChoice> NotifyOfActionChoice = (player, choice) => { };
 
@@ -45,6 +45,8 @@ namespace VoMP.Core
         public ICharacter Character { get; private set; }
         public bool CreatesTradingPostsWhileMoving { get; set; }
         public int MaxTradingPosts { get; set; } = 9;
+        public int PawnCount { get; set; } = 1;
+        public Location StartLocation { get; set; } = Location.Venezia;
 
         public static Player Create(Game game, Color color, int startingOrder)
         {
@@ -56,13 +58,13 @@ namespace VoMP.Core
                     Coin = 6 + startingOrder
                 }
             };
-            player.SetPawnLocation(Location.Venezia);
             return player;
         }
 
-        private void SetPawnLocation(Location location)
+        public void SetStartLocation()
         {
-            MovePawn(_pawnLocation, location);
+            for (var i = 0; i<PawnCount; i++)
+                MovePawn(Location.Unknown, StartLocation);
         }
 
         public void StartRound()
@@ -199,9 +201,9 @@ namespace VoMP.Core
             return TradingPosts.Contains(location);
         }
 
-        public Location GetPawnLocation()
+        public IEnumerable<Location> GetPawnLocations()
         {
-            return _pawnLocation;
+            return _pawnLocations;
         }
 
         public void TakeDice(IEnumerable<Die> dice)
@@ -225,22 +227,26 @@ namespace VoMP.Core
         public void MovePawn(Location start, Location end)
         {
             if (start != Location.Unknown)
+            {
+                _pawnLocations.Remove(start);
                 Game.GetMapSpace(start).RemovePawn(Color);
-            _pawnLocation = end;
+            }
+            _pawnLocations.Add(end);
             Game.GetMapSpace(end).AddPawn(Color);
             if (CreatesTradingPostsWhileMoving)
                 BuildTradingPost(end);
         }
 
-        public void Move(List<Route> path)
+        public void Move(IList<Route> path)
         {
             var cost = path.GetCost();
-            var start = path.First().Start;
-            var end = path.Last().End;
-            PayCost(cost, $"move {path.Count} from {start} to {end}");
+            var subPaths = path.SegmentOnChange((last, current) => current.Start != last.End).Select(x => $"{x.First().Start} to {x.Last().End}");
+            var subPathsString = string.Join(", ", subPaths);
+            PayCost(cost, $"move {path.Count} from {subPathsString}");
             foreach (var route in path)
                 MovePawn(route.Start, route.End);
-            BuildTradingPost(end);
+            foreach (var location in GetPawnLocations().ToList())
+                BuildTradingPost(location);
         }
 
         private bool CanBuildTradingPostAt(Location end)

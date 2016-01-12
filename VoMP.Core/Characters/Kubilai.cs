@@ -9,6 +9,7 @@ namespace VoMP.Core.Characters
         {
             // Starts in Beijing
             player.MovePawn(Location.Unknown, Location.Beijing);
+            player.StartLocation = Location.Beijing;
             player.BuildTradingPost(Location.Beijing);
         }
 

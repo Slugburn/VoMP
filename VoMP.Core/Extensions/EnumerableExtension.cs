@@ -32,7 +32,7 @@ namespace VoMP.Core.Extensions
 
         public static string ToDelimitedString<T>(this IEnumerable<T> source, string seperator = ",")
         {
-            return string.Join(seperator, source);
+            return String.Join(seperator, source);
         }
 
         public static List<T> Shuffle<T>(this IEnumerable<T> source)
@@ -69,6 +69,24 @@ namespace VoMP.Core.Extensions
         public static T Draw<T>(this IList<T> source)
         {
             return Draw(source, 1).FirstOrDefault();
+        }
+
+        public static IEnumerable<List<T>> SegmentOnChange<T>(this IEnumerable<T> list, Func<T, T, bool> segmentCondition)
+        {
+            var subList = new List<T>();
+            foreach (var item in list)
+            {
+                if (subList.Any() && segmentCondition(subList.Last(), item))
+                {
+                    yield return subList;
+                    subList = new List<T> {item};
+                }
+                else
+                {
+                    subList.Add(item);
+                }
+            }
+            yield return subList;
         }
     }
 }

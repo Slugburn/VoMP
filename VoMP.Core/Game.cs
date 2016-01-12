@@ -22,7 +22,7 @@ namespace VoMP.Core
         public int Round { get; set; }
         public int BlackDice { get; set; }
 
-        public void SetUp()
+        public void SetUp(IEnumerable<ICharacter> characters)
         {
             // Create map spaces
             _mapLocations = Locations.All.ToDictionary(loc => loc, loc => new MapLocation(loc));
@@ -64,7 +64,10 @@ namespace VoMP.Core
             _players.PairWithRandom(Contract.CreateStartingContracts()).ForEach(x => x.Item1.GainContract(x.Item2));
 
             // Choose characters
-            _players.PairWith(Character.CreateBasic()).ForEach(x=>x.Item1.ClaimCharacter(x.Item2));
+            _players.PairWith(characters).ForEach(x=>x.Item1.ClaimCharacter(x.Item2));
+
+            // Set pawn location
+            _players.ForEach(p=>p.SetStartLocation());
 
             // Give each player two objectives
             var goalGroups = Objective.CreateAll().Shuffle().Segment(2);

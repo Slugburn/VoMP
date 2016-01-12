@@ -50,9 +50,12 @@
   <ItemGroup>
     <Compile Include="AiTest.cs" />
     <Compile Include="GameTest.cs" />
+    <Compile Include="MoveTest.cs" />
     <Compile Include="RouteMapTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestCharacter.cs" />
     <Compile Include="TestExtension.cs" />
+    <Compile Include="TestScenario.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\VoMP.Core\VoMP.Core.csproj">

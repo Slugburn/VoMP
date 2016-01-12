@@ -162,14 +162,14 @@ namespace VoMP.Core.Behavior
         {
             // stop traveling if all trading posts have been built
             if (player.TradingPosts.Count >= player.MaxTradingPosts) return null;
-            var pawnAt = player.GetPawnLocation();
+            var pawnsAt = player.GetPawnLocations();
             var goalCities = player.Objectives.SelectMany(g => new[] {g.Location1, g.Location2});
             var targetCities = goalCities.Concat(new[] {Location.Beijing}).Except(player.TradingPosts).ToList();
             if (targetCities.Any())
-                return player.RouteMap.BestPath(pawnAt, targetCities);
+                return player.RouteMap.BestPath(pawnsAt.First(), targetCities);
             // continue building trading posts once goal cities have been reached
             var noTradingPost = Locations.All.Where(l => l.IsTradeCity()).Except(player.TradingPosts).ToList();
-            return noTradingPost.Select(t => player.RouteMap.ShortestPath(pawnAt, t)).OrderBy(p => p.Count).First();
+            return noTradingPost.Select(t => player.RouteMap.ShortestPath(pawnsAt.First(), t)).OrderBy(p => p.Count).First();
         }
     }
 }
